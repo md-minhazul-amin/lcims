@@ -144,3 +144,9 @@ The backend on port 5000 must also be running for any data to load.
 | AI Insights shows red error | Either OpenAI rejected the key (replace it in `.env`), or the network is blocked. With no key, demo mode kicks in instead and the page works. |
 | Frontend shows blank page when opening `build/index.html` directly | Expected — see "Viewing the production build" above. |
 | `npm start` doesn't open a browser | Set `BROWSER=none` in the env, or open http://localhost:3000 manually. |
+
+## Team — The IT Crowd
+
+- Md Minhazul Amin ([@md-minhazul-amin](https://github.com/md-minhazul-amin))
+- Ayush Sudedi ([@Ayush3335](https://github.com/Ayush3335))
+- Aayush Khadgi ([@aayushsai47-dev](https://github.com/aayushsai47-dev))
