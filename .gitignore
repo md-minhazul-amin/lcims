@@ -5,3 +5,10 @@ build/
 dist/
 .DS_Store
 *.log
+
+# Submission archives (built locally, no need to track)
+LCIMS_Assessment4_*.zip
+*.zip
+
+# Microsoft Office temporary lock files (created while a doc is open)
+~$*
