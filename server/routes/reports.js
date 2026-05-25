@@ -1,3 +1,15 @@
+// ============================================================================
+// File:    routes/reports.js
+// Purpose: Dashboard KPI metrics and date-ranged usage reports for the LCIMS
+//          API. GET /dashboard aggregates six café-scoped queries into one
+//          payload for the home page. GET /usage returns per-item consumption
+//          vs restock totals over a user-selected date window for the Reports
+//          bar chart.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 const express = require('express');
 
 const pool = require('../db');
@@ -7,17 +19,24 @@ const router = express.Router();
 
 router.use(verifyToken);
 
-// Simple YYYY-MM-DD check so we can reject bad params before hitting Postgres.
+// ISO_DATE: lightweight shape check for YYYY-MM-DD query params. We validate
+// in Node before PostgreSQL so invalid input returns a clear 400 JSON message
+// instead of a database error (SQLSTATE 22007/22008), avoids pointless query
+// planning, and blocks malformed strings that could confuse date casting.
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// ---------------------------------------------------------------------------
-// GET /api/reports/dashboard
-// One JSON object with the headline metrics for the caller's cafe.
-// ---------------------------------------------------------------------------
+/**
+ * @route  GET /api/reports/dashboard
+ * @desc   Return headline KPIs, recent stock activity, and low-stock item list
+ * @access Private (any authenticated role: Manager, Staff, Admin)
+ */
 router.get('/dashboard', async (req, res) => {
     const cafeId = req.user.cafe_id;
 
     try {
+        // Promise.all(): run 6 independent queries in parallel. Each pool.query
+        // may use a different connection, so total latency is ~one round-trip
+        // instead of six sequential waits — important for a snappy dashboard load.
         const [
             totalItemsQ,
             lowStockQ,
@@ -26,24 +45,29 @@ router.get('/dashboard', async (req, res) => {
             recentActivityQ,
             lowStockItemsQ,
         ] = await Promise.all([
+            // totalItems: COUNT of all inventory_items rows for this café.
             pool.query(
                 `SELECT COUNT(*)::int AS n
                  FROM inventory_items
                  WHERE cafe_id = $1`,
                 [cafeId]
             ),
+            // lowStock: COUNT of items where quantity < threshold (KPI badge).
             pool.query(
                 `SELECT COUNT(*)::int AS n
                  FROM inventory_items
                  WHERE cafe_id = $1 AND quantity < threshold`,
                 [cafeId]
             ),
+            // suppliers: COUNT of supplier directory entries for this café.
             pool.query(
                 `SELECT COUNT(*)::int AS n
                  FROM suppliers
                  WHERE cafe_id = $1`,
                 [cafeId]
             ),
+            // weekChanges: COUNT of stock_logs in the last 7 days (scoped via
+            // JOIN to inventory_items so only this café's movements count).
             pool.query(
                 `SELECT COUNT(*)::int AS n
                  FROM stock_logs sl
@@ -52,6 +76,8 @@ router.get('/dashboard', async (req, res) => {
                    AND sl.timestamp >= NOW() - INTERVAL '7 days'`,
                 [cafeId]
             ),
+            // recentActivity: up to 10 newest stock_logs with item name and
+            // user email for the dashboard activity feed.
             pool.query(
                 `SELECT sl.log_id, sl.item_id, sl.change_qty, sl.reason, sl.timestamp,
                         sl.user_id,
@@ -65,6 +91,8 @@ router.get('/dashboard', async (req, res) => {
                  LIMIT 10`,
                 [cafeId]
             ),
+            // lowStockItems: full rows (not just a count) for items below
+            // threshold so the dashboard can list names, qty, and units.
             pool.query(
                 `SELECT item_id, name, category, quantity, threshold, unit
                  FROM inventory_items
@@ -88,30 +116,42 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// GET /api/reports/usage?from=YYYY-MM-DD&to=YYYY-MM-DD
-// Per-item usage and restock totals over the date window.
-// Window is inclusive on both ends (covers the full "to" day).
-// Only items with at least one stock_log in the window are returned.
-// ---------------------------------------------------------------------------
+/**
+ * @route  GET /api/reports/usage
+ * @desc   Per-item usage and restock totals between from and to (inclusive)
+ * @access Private (any authenticated role)
+ */
 router.get('/usage', async (req, res) => {
     const { from, to } = req.query;
 
+    // from/to validation: both query params required before any DB work.
     if (!from || !to) {
         return res
             .status(400)
             .json({ error: 'from and to query parameters are required (YYYY-MM-DD)' });
     }
+    // Must match ISO_DATE shape (YYYY-MM-DD); catches typos and wrong formats
+    // without relying on PostgreSQL to reject them.
     if (!ISO_DATE.test(from) || !ISO_DATE.test(to)) {
         return res
             .status(400)
             .json({ error: 'from and to must be YYYY-MM-DD dates' });
     }
+    // ISO date strings compare lexicographically in calendar order.
     if (from > to) {
         return res.status(400).json({ error: 'from must be on or before to' });
     }
 
     try {
+        // COALESCE + SUM + CASE: one grouped query splits stock_logs by sign of
+        // change_qty:
+        //   total_used  — negative change_qty = usage/consumption; SUM(ABS(...))
+        //   total_added — positive change_qty = restocking/deliveries; SUM as-is
+        // COALESCE(..., 0) turns NULL (no matching logs in the CASE branch) into 0.
+        //
+        // Inclusive date range: timestamp >= from::date starts at midnight on
+        // "from"; timestamp < (to::date + 1 day) includes every moment through
+        // the end of "to" without using <= timestamp at 23:59:59 (timezone-safe).
         const result = await pool.query(
             `SELECT i.item_id,
                     i.name,
@@ -144,4 +184,5 @@ router.get('/usage', async (req, res) => {
     }
 });
 
+// Export the router for mounting in index.js: app.use('/api/reports', reportsRoutes).
 module.exports = router;
