@@ -1,3 +1,14 @@
+// ============================================================================
+// File:    routes/inventory.js
+// Purpose: Inventory CRUD endpoints with stock movement logging and automatic
+//          low-stock alerts. All reads and writes are scoped to the caller's
+//          cafe_id from the JWT. Stock adjustments run in a single transaction
+//          so quantity, stock_logs, and alerts stay consistent.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 const express = require('express');
 
 const pool = require('../db');
@@ -5,19 +16,23 @@ const { verifyToken, requireManager } = require('../middleware/auth');
 
 const router = express.Router();
 
-// All inventory routes require a valid JWT.
+// Every route below requires a valid JWT (populates req.user).
 router.use(verifyToken);
 
-// Parse and validate a positive integer URL param. Returns null if invalid.
+// parseId: URL params arrive as strings (e.g. "5" or "abc"). We only accept
+// positive integers because item_id is a SERIAL primary key — rejecting NaN,
+// zero, negatives, and non-numeric input early avoids useless DB round-trips
+// and returns a clean 404 instead of a Postgres cast error.
 function parseId(value) {
     const n = Number.parseInt(value, 10);
     return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/inventory
-// All items for the logged-in user's cafe, joined with supplier name.
-// ---------------------------------------------------------------------------
+/**
+ * @route  GET /api/inventory
+ * @desc   List all inventory items for the caller's cafe (with supplier name)
+ * @access Private (any authenticated role: Manager, Staff, Admin)
+ */
 router.get('/', async (req, res) => {
     try {
         const result = await pool.query(
@@ -37,10 +52,11 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// GET /api/inventory/:id
-// Single item joined with supplier name. 404 if not found in user's cafe.
-// ---------------------------------------------------------------------------
+/**
+ * @route  GET /api/inventory/:id
+ * @desc   Fetch one inventory item by id (404 if not in caller's cafe)
+ * @access Private (any authenticated role)
+ */
 router.get('/:id', async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -68,10 +84,11 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// POST /api/inventory   (Manager / Admin)
-// Body: { name, category, unit, quantity?, threshold?, supplier_id? }
-// ---------------------------------------------------------------------------
+/**
+ * @route  POST /api/inventory
+ * @desc   Create a new inventory item for the caller's cafe
+ * @access Manager, Admin
+ */
 router.post('/', requireManager, async (req, res) => {
     try {
         const { name, category, unit, quantity, threshold, supplier_id } = req.body || {};
@@ -103,10 +120,11 @@ router.post('/', requireManager, async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// PUT /api/inventory/:id   (Manager / Admin)
-// Replace all editable fields and refresh updated_at.
-// ---------------------------------------------------------------------------
+/**
+ * @route  PUT /api/inventory/:id
+ * @desc   Replace all editable fields on an inventory item
+ * @access Manager, Admin
+ */
 router.put('/:id', requireManager, async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -153,11 +171,11 @@ router.put('/:id', requireManager, async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// PATCH /api/inventory/:id/stock   (any authenticated user)
-// Body: { change_qty, reason? }
-// Atomically: update quantity, log the change, raise an alert if below threshold.
-// ---------------------------------------------------------------------------
+/**
+ * @route  PATCH /api/inventory/:id/stock
+ * @desc   Adjust stock quantity, write stock_logs row, create alert if below threshold
+ * @access Private (any authenticated role — Staff may record usage/restock)
+ */
 router.patch('/:id/stock', async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -175,10 +193,19 @@ router.patch('/:id/stock', async (req, res) => {
             .json({ error: 'change_qty is required and must be a number' });
     }
 
+    // pool.connect() instead of pool.query(): transactions (BEGIN/COMMIT/ROLLBACK)
+    // must run on one dedicated connection. pool.query() may use a different
+    // connection per call, so a transaction started on client A would not wrap
+    // queries executed on client B — leading to partial updates.
     const client = await pool.connect();
     try {
+        // BEGIN: start an explicit transaction; nothing is visible to other
+        // sessions until COMMIT (or fully undone on ROLLBACK).
         await client.query('BEGIN');
 
+        // Atomic UPDATE: apply change_qty to quantity in one statement
+        // (quantity = quantity + $1). RETURNING * gives the post-update row
+        // for logging and threshold checks. cafe_id in WHERE enforces tenancy.
         const updated = await client.query(
             `UPDATE inventory_items
              SET quantity   = quantity + $1,
@@ -195,12 +222,16 @@ router.patch('/:id/stock', async (req, res) => {
 
         const item = updated.rows[0];
 
+        // stock_logs INSERT: audit trail — who changed stock, by how much, why.
         await client.query(
             `INSERT INTO stock_logs (item_id, user_id, change_qty, reason)
              VALUES ($1, $2, $3, $4)`,
             [item.item_id, req.user.user_id, change_qty, reason ?? null]
         );
 
+        // alerts INSERT + threshold comparison: after the update, if on-hand
+        // quantity is strictly below the item's reorder threshold, insert an
+        // active alert so the dashboard and reports can surface low stock.
         if (Number(item.quantity) < Number(item.threshold)) {
             await client.query(
                 `INSERT INTO alerts (item_id, status) VALUES ($1, 'active')`,
@@ -208,12 +239,17 @@ router.patch('/:id/stock', async (req, res) => {
             );
         }
 
+        // COMMIT: persist all three writes together (quantity, log, alert).
         await client.query('COMMIT');
         res.json(item);
     } catch (err) {
+        // ROLLBACK in catch: undo every statement in this transaction so we
+        // never leave a half-applied stock change if logging or alerting fails.
         await client.query('ROLLBACK').catch(() => {});
 
-        // CHECK constraint violation -> would have pushed quantity negative.
+        // err.code === '23514': PostgreSQL CHECK constraint violation — the
+        // schema enforces quantity >= 0; a large negative change_qty triggers
+        // this instead of storing invalid stock. Map to a clear 400 for the UI.
         if (err.code === '23514') {
             return res
                 .status(400)
@@ -222,13 +258,17 @@ router.patch('/:id/stock', async (req, res) => {
         console.error('[inventory] PATCH /:id/stock', err.message || err.code);
         res.status(500).json({ error: 'Internal server error' });
     } finally {
+        // client.release() in finally: return the borrowed connection to the
+        // pool whether we succeeded or failed — prevents connection leaks.
         client.release();
     }
 });
 
-// ---------------------------------------------------------------------------
-// DELETE /api/inventory/:id   (Manager / Admin)
-// ---------------------------------------------------------------------------
+/**
+ * @route  DELETE /api/inventory/:id
+ * @desc   Delete an inventory item (cascades to stock_logs and alerts)
+ * @access Manager, Admin
+ */
 router.delete('/:id', requireManager, async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -253,11 +293,11 @@ router.delete('/:id', requireManager, async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// GET /api/inventory/:id/logs   (any authenticated user)
-// Stock-movement history for one item, joined with the acting user's email.
-// INNER JOIN on inventory_items enforces cafe scoping.
-// ---------------------------------------------------------------------------
+/**
+ * @route  GET /api/inventory/:id/logs
+ * @desc   Stock movement history for one item (newest first, with user email)
+ * @access Private (any authenticated role)
+ */
 router.get('/:id/logs', async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -284,4 +324,5 @@ router.get('/:id/logs', async (req, res) => {
     }
 });
 
+// Export the router for mounting in index.js: app.use('/api/inventory', inventoryRoutes).
 module.exports = router;
