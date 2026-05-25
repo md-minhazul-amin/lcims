@@ -1,3 +1,22 @@
+/**
+ * @file Login.js
+ * @description Login form page with JWT authentication
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/Login.js
+// Purpose: Public sign-in page. Posts credentials to POST /api/auth/login,
+//          stores the returned JWT via AuthContext.login, and redirects to
+//          the dashboard. Already-authenticated users are sent to /.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
@@ -12,10 +31,12 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // If a token already exists (e.g. refreshed session), skip the form.
     if (token) {
         return <Navigate to="/" replace />;
     }
 
+    // handleSubmit: call login API, persist token, navigate home.
     async function handleSubmit(event) {
         event.preventDefault();
         setError('');

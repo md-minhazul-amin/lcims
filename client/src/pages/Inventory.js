@@ -1,3 +1,22 @@
+/**
+ * @file Inventory.js
+ * @description Inventory list page with CRUD operations and stock level indicators
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/Inventory.js
+// Purpose: Inventory list with search, low-stock badges, and add-item form.
+//          Managers/Admins can POST new items; all roles can open item detail.
+//          Loads GET /inventory and GET /suppliers in parallel.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
@@ -223,6 +242,7 @@ export default function Inventory() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
+    // Role gate: only Manager and Admin see Add Item and can POST /inventory.
     const canManage = user?.role === 'Manager' || user?.role === 'Admin';
 
     const [items, setItems] = useState([]);
@@ -286,6 +306,7 @@ export default function Inventory() {
         setSaveError('');
     }
 
+    // handleSave: POST /inventory — Manager/Admin only (requireManager on server).
     async function handleSave(event) {
         event.preventDefault();
         setSaveError('');
@@ -309,7 +330,7 @@ export default function Inventory() {
         }
     }
 
-    // --- filter ------------------------------------------------------------
+    // Client-side filter by name or category (no extra API call).
     const q = searchQuery.trim().toLowerCase();
     const visibleItems = q
         ? items.filter(

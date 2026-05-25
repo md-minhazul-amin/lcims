@@ -32,6 +32,7 @@ const inventoryRoutes = require('./routes/inventory');  // /api/inventory/*  (CR
 const suppliersRoutes = require('./routes/suppliers');  // /api/suppliers/*  (CRUD)
 const reportsRoutes   = require('./routes/reports');    // /api/reports/*    (dashboard, usage)
 const aiRoutes        = require('./routes/ai');         // /api/ai/*         (OpenAI reorder)
+const alertsRoutes    = require('./routes/alerts');
 
 // Create the Express application instance.
 const app = express();
@@ -55,6 +56,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/suppliers', suppliersRoutes);
 app.use('/api/reports',   reportsRoutes);
 app.use('/api/ai',        aiRoutes);
+// Alert management routes
+app.use('/api/alerts',    alertsRoutes);
 
 // Catch-all 404 handler. Reached only if no route above matched the URL.
 // Returns a clean JSON error rather than Express's default HTML page.

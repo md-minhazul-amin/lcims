@@ -1,3 +1,21 @@
+/**
+ * @file Reports.js
+ * @description Usage reports page with date range selection and Recharts bar chart
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/Reports.js
+// Purpose: Date-ranged usage report — GET /api/reports/usage with from/to,
+//          summary KPIs, Recharts bar chart (used vs restocked), and data table.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useState } from 'react';
 import {
     Bar,
@@ -182,6 +200,7 @@ const styles = {
 
 // --- helpers ---------------------------------------------------------------
 
+// Default date range: last 7 days through today (YYYY-MM-DD for API params).
 function todayIso() {
     const d = new Date();
     const y = d.getFullYear();
@@ -210,10 +229,13 @@ export default function Reports() {
     const [from, setFrom] = useState(isoDaysAgo(7));
     const [to,   setTo]   = useState(todayIso());
 
-    const [data, setData]       = useState(null); // null until first submit
+    // data stays null until user clicks Generate Report (no fetch on mount).
+    const [data, setData]       = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError]     = useState('');
 
+    // handleSubmit: fetch usage aggregates; server splits negative change_qty
+    // (used) vs positive (total_added / restocked) per item in the window.
     async function handleSubmit(event) {
         event.preventDefault();
         setError('');
@@ -229,14 +251,14 @@ export default function Reports() {
         }
     }
 
-    // Derived values once data is present ---------------------------------
+    // Client-side totals from API rows (ordered by total_used DESC on server).
     const hasData = Array.isArray(data);
 
     const totalUsed     = hasData ? data.reduce((s, r) => s + num(r.total_used),  0) : 0;
     const totalRestocked = hasData ? data.reduce((s, r) => s + num(r.total_added), 0) : 0;
     const mostUsedItem  = hasData && data.length > 0 ? data[0].name : '—';
 
-    // Chart-friendly shape
+    // Map API fields to Recharts keys: used / restocked.
     const chartData = hasData
         ? data.map((r) => ({
               name:      r.name,

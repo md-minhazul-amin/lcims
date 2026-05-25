@@ -1,3 +1,21 @@
+/**
+ * @file Dashboard.js
+ * @description Main dashboard showing KPI cards, low stock alerts, and recent activity feed
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/Dashboard.js
+// Purpose: Home dashboard — KPI cards, low-stock list, and recent stock activity.
+//          Fetches GET /api/reports/dashboard on mount. Uses inline styles only.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
@@ -144,7 +162,7 @@ const styles = {
     },
 };
 
-// --- helpers ---------------------------------------------------------------
+// --- helpers: format stock-log timestamps and signed quantity changes -------
 
 function formatTimestamp(iso) {
     if (!iso) return '';
@@ -166,7 +184,7 @@ function formatChange(value) {
     return `${sign}${n.toFixed(2)}`;
 }
 
-// --- small presentational pieces -------------------------------------------
+// --- KpiCard: reusable metric tile (icon, label, number, left accent bar) ---
 
 function KpiCard({ icon, value, label, accent }) {
     return (
@@ -178,13 +196,15 @@ function KpiCard({ icon, value, label, accent }) {
     );
 }
 
-// --- page ------------------------------------------------------------------
+// --- page: load dashboard aggregate once on mount --------------------------
 
 export default function Dashboard() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Fetch KPIs + low_stock_items + recent_activity; cancelled flag avoids
+    // setState after unmount if the user navigates away quickly.
     useEffect(() => {
         let cancelled = false;
         setLoading(true);

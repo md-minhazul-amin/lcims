@@ -1,3 +1,21 @@
+/**
+ * @file ItemDetail.js
+ * @description Individual inventory item detail page with stock adjustment and movement history
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/ItemDetail.js
+// Purpose: Single inventory item — edit fields (Manager/Admin), PATCH stock
+//          with reason, view stock_logs history. Route param :id from React Router.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
@@ -285,6 +303,7 @@ export default function ItemDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    // Staff: read-only item fields but may PATCH /inventory/:id/stock.
     const canManage = user?.role === 'Manager' || user?.role === 'Admin';
 
     const [item, setItem] = useState(null);
@@ -305,7 +324,7 @@ export default function ItemDetail() {
     const [stockError, setStockError] = useState('');
     const [stockOk, setStockOk] = useState('');
 
-    // -- load + reload -----------------------------------------------------
+    // loadAll: parallel fetch item, logs, and suppliers; sync form state from item.
     async function loadAll() {
         const [itemRes, logsRes, supRes] = await Promise.all([
             api.get(`/inventory/${id}`),
@@ -353,7 +372,7 @@ export default function ItemDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    // -- save (PUT) --------------------------------------------------------
+    // handleSave: PUT /inventory/:id — Manager/Admin only.
     async function handleSave(event) {
         event.preventDefault();
         if (!canManage) return;
@@ -378,7 +397,7 @@ export default function ItemDetail() {
         }
     }
 
-    // -- delete (DELETE) --------------------------------------------------
+    // handleDelete: DELETE /inventory/:id then redirect to list.
     async function handleDelete() {
         if (!canManage) return;
         const confirmed = window.confirm(
@@ -396,7 +415,7 @@ export default function ItemDetail() {
         }
     }
 
-    // -- update stock (PATCH) ----------------------------------------------
+    // handleStockUpdate: PATCH /inventory/:id/stock (negative = usage, positive = restock).
     async function handleStockUpdate(event) {
         event.preventDefault();
         setStockError('');

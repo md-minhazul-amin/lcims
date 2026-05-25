@@ -1,3 +1,22 @@
+/**
+ * @file AIInsights.js
+ * @description AI-powered reorder suggestions page using OpenAI gpt-3.5-turbo
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/AIInsights.js
+// Purpose: AI reorder suggestions UI — POST /api/ai/reorder-suggestions
+//          (OpenAI gpt-3.5-turbo or server demo mode). Cards show urgency,
+//          reorder qty, and reason per inventory item.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useState } from 'react';
 import api from '../api/axios';
 
@@ -194,12 +213,13 @@ const styles = {
     },
 };
 
-// --- urgency helper --------------------------------------------------------
+// --- urgency helper: map reorder_qty + reorder_by to UI badge colours --------
 
 const URGENT = { bg: C.lowBg,  fg: C.lowFg,  label: '⚠' };       // red
 const SOON   = { bg: C.warnBg, fg: C.warnFg, label: '⏰' };       // orange
 const LATER  = { bg: C.okBg,   fg: C.okFg,   label: '✓' };       // green
 
+// computeUrgency: qty <= 0 => "Not needed"; else days until reorder_by drives tier.
 function computeUrgency(suggestion) {
     const qty = parseFloat(suggestion.reorder_qty);
     if (!Number.isFinite(qty) || qty <= 0) {
@@ -236,6 +256,7 @@ export default function AIInsights() {
     const [suggestions, setSuggestions] = useState(null);
     const [itemsAnalysed, setItemsAnalysed] = useState(0);
 
+    // handleGenerate: one-shot analysis; server may return demo: true without OpenAI.
     async function handleGenerate() {
         setLoading(true);
         setError('');

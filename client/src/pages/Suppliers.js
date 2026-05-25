@@ -1,3 +1,21 @@
+/**
+ * @file Suppliers.js
+ * @description Supplier directory page with CRUD operations and item count badges
+ * @author The IT Crowd
+ * @date May 2026
+ * @project LCIMS - Local Cafe Inventory Management System
+ * @course CPRO306 - Capstone Project, Kent Institute Australia
+ */
+
+// ============================================================================
+// File:    pages/Suppliers.js
+// Purpose: Supplier directory — card grid with item_count, add/edit form,
+//          delete with confirmation. Manager/Admin for mutations; all roles read.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -226,14 +244,15 @@ export default function Suppliers() {
     const [pageError, setPageError] = useState('');
 
     const [showForm, setShowForm] = useState(false);
-    const [editingId, setEditingId] = useState(null); // null = new
+    // editingId: null = creating; number = PUT /suppliers/:id for that row.
+    const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
 
     const [deletingId, setDeletingId] = useState(null);
 
-    // -- load --------------------------------------------------------------
+    // fetchSuppliers: GET /suppliers — includes item_count per card from server.
     async function fetchSuppliers() {
         const res = await api.get('/suppliers');
         setSuppliers(res.data || []);
@@ -290,7 +309,7 @@ export default function Suppliers() {
         setSaveError('');
     }
 
-    // -- save (POST or PUT) -----------------------------------------------
+    // handleSave: POST for new supplier, PUT when editingId is set.
     async function handleSave(event) {
         event.preventDefault();
         if (!canManage) return;
@@ -319,7 +338,7 @@ export default function Suppliers() {
         }
     }
 
-    // -- delete -----------------------------------------------------------
+    // handleDelete: DELETE /suppliers/:id — server sets inventory supplier_id to NULL.
     async function handleDelete(supplier) {
         if (!canManage) return;
         const confirmed = window.confirm(
