@@ -1,3 +1,14 @@
+// ============================================================================
+// File:    routes/suppliers.js
+// Purpose: Supplier directory CRUD endpoints for the LCIMS API. Lists
+//          suppliers with per-supplier inventory counts, and lets Managers
+//          create, update, and delete supplier records scoped to the caller's
+//          cafe_id from the JWT.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 const express = require('express');
 
 const pool = require('../db');
@@ -7,17 +18,26 @@ const router = express.Router();
 
 router.use(verifyToken);
 
+// parseId: supplier_id in the URL must be a positive integer (SERIAL PK).
+// Rejecting invalid values early returns 404 without hitting the database.
 function parseId(value) {
     const n = Number.parseInt(value, 10);
     return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/suppliers
-// All suppliers for the caller's cafe, with a count of linked inventory items.
-// ---------------------------------------------------------------------------
+/**
+ * @route  GET /api/suppliers
+ * @desc   List all suppliers for the caller's cafe with item_count per supplier
+ * @access Private (any authenticated role: Manager, Staff, Admin)
+ */
 router.get('/', async (req, res) => {
     try {
+        // LEFT JOIN inventory_items: include every supplier even if it has zero
+        // linked products (an INNER JOIN would drop suppliers with no items).
+        // COUNT(i.item_id) counts only non-null item rows per supplier group, so
+        // suppliers with no matches get item_count = 0 (COUNT(*) would wrongly
+        // return 1 because GROUP BY still produces one row). The join also matches
+        // cafe_id so we only count items belonging to this café, not another tenant.
         const result = await pool.query(
             `SELECT s.supplier_id, s.name, s.contact, s.phone, s.email,
                     s.cafe_id, s.created_at,
@@ -37,10 +57,11 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// POST /api/suppliers   (Manager / Admin)
-// Body: { name, contact?, phone?, email? }
-// ---------------------------------------------------------------------------
+/**
+ * @route  POST /api/suppliers
+ * @desc   Create a new supplier for the caller's cafe
+ * @access Manager, Admin
+ */
 router.post('/', requireManager, async (req, res) => {
     try {
         const { name, contact, phone, email } = req.body || {};
@@ -61,10 +82,11 @@ router.post('/', requireManager, async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// PUT /api/suppliers/:id   (Manager / Admin)
-// Body: { name, contact?, phone?, email? }
-// ---------------------------------------------------------------------------
+/**
+ * @route  PUT /api/suppliers/:id
+ * @desc   Update supplier contact details and name
+ * @access Manager, Admin
+ */
 router.put('/:id', requireManager, async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -98,10 +120,11 @@ router.put('/:id', requireManager, async (req, res) => {
     }
 });
 
-// ---------------------------------------------------------------------------
-// DELETE /api/suppliers/:id   (Manager / Admin)
-// Linked inventory_items.supplier_id is set to NULL by the FK ON DELETE rule.
-// ---------------------------------------------------------------------------
+/**
+ * @route  DELETE /api/suppliers/:id
+ * @desc   Remove a supplier from the directory
+ * @access Manager, Admin
+ */
 router.delete('/:id', requireManager, async (req, res) => {
     const id = parseId(req.params.id);
     if (id === null) {
@@ -109,6 +132,11 @@ router.delete('/:id', requireManager, async (req, res) => {
     }
 
     try {
+        // ON DELETE SET NULL (defined in lcims_schema.sql on
+        // inventory_items.supplier_id): deleting a supplier does NOT delete
+        // inventory items that referenced it. PostgreSQL automatically sets
+        // supplier_id to NULL on those rows so stock records remain intact and
+        // can be re-linked to a different supplier later.
         const result = await pool.query(
             `DELETE FROM suppliers
              WHERE supplier_id = $1 AND cafe_id = $2
@@ -126,4 +154,5 @@ router.delete('/:id', requireManager, async (req, res) => {
     }
 });
 
+// Export the router for mounting in index.js: app.use('/api/suppliers', suppliersRoutes).
 module.exports = router;
