@@ -1,3 +1,14 @@
+// ============================================================================
+// File:    routes/ai.js
+// Purpose: AI-powered reorder suggestions using OpenAI gpt-3.5-turbo with an
+//          offline demo fallback. When OPENAI_API_KEY is missing or a placeholder,
+//          buildDemoSuggestions returns deterministic advice from real inventory
+//          data so the AI Insights page works without billing an API call.
+// Author:  The IT Crowd
+// Date:    May 2026
+// Project: LCIMS - Local Cafe Inventory Management System
+// ============================================================================
+
 const express = require('express');
 const OpenAI = require('openai');
 
@@ -8,9 +19,10 @@ const router = express.Router();
 
 router.use(verifyToken);
 
-// Treat blank, the .env placeholder, or anything obviously-not-an-OpenAI-key
-// as "not configured" so we can return a clear error instead of letting OpenAI
-// reject the call with a generic 401.
+// isPlaceholderKey: detect fake or unset keys BEFORE calling OpenAI. The
+// .env.example ships with "your_openai_api_key_here"; students may leave that
+// or paste invalid values. Catching them here switches to demo mode (or avoids
+// a paid 401 round-trip) instead of surfacing a cryptic SDK error to the UI.
 function isPlaceholderKey(key) {
     if (!key || typeof key !== 'string') return true;
     const trimmed = key.trim();
@@ -19,9 +31,10 @@ function isPlaceholderKey(key) {
     return !trimmed.startsWith('sk-');
 }
 
-// Lazily construct the OpenAI client so a missing key only fails the AI route,
-// not every other endpoint that requires this module to load. Cache by the key
-// value so editing .env (nodemon restart not strictly needed) is picked up.
+// getOpenAIClient: lazy-init pattern — the OpenAI client is NOT created at
+// module load time. That way importing this file never throws when the key is
+// missing; only POST /reorder-suggestions needs AI. cachedClient + cachedKey
+// reuse one client instance per process until OPENAI_API_KEY changes.
 let cachedClient = null;
 let cachedKey = null;
 function getOpenAIClient() {
@@ -34,10 +47,7 @@ function getOpenAIClient() {
 }
 
 // ---------------------------------------------------------------------------
-// Demo-mode fallback: when no real OPENAI_API_KEY is configured we still
-// return realistic, deterministic suggestions computed from the actual
-// inventory + last-7-days usage. This lets reviewers exercise the AI Insights
-// page (and capture screenshots) without paying for an OpenAI call.
+// Demo mode (offline fallback)
 // ---------------------------------------------------------------------------
 function addDays(isoDate, days) {
     const d = new Date(isoDate + 'T00:00:00Z');
@@ -50,11 +60,19 @@ function buildDemoSuggestions(items, today) {
         const current = Number(it.current_qty) || 0;
         const threshold = Number(it.threshold) || 0;
         const used7d = Number(it.used_last_7_days) || 0;
-        const weeklyUse = used7d; // already a 7-day window
+
+        // Weekly usage: used_last_7_days is already summed over 7 days from
+        // stock_logs (negative change_qty only), so we treat it as units/week.
+        const weeklyUse = used7d;
+
+        // weeksLeft: how many weeks current stock lasts at the recent pace.
+        // current / weeklyUse; if weeklyUse is 0, Infinity (no burn rate → not urgent
+        // from usage alone, threshold check may still apply).
         const weeksLeft = weeklyUse > 0 ? current / weeklyUse : Infinity;
         const supplier = it.supplier_name || 'preferred supplier';
 
-        // Urgent: below threshold, or fewer than ~3 days of stock at current pace.
+        // Urgent: below reorder threshold OR fewer than ~3.5 days of cover
+        // (weeksLeft < 0.5). reorder_by = today, non-zero reorder_qty.
         if (current < threshold || weeksLeft < 0.5) {
             const refillTarget = Math.max(threshold * 2, weeklyUse * 2);
             const reorderQty = Math.max(1, Math.ceil(refillTarget - current));
@@ -73,10 +91,9 @@ function buildDemoSuggestions(items, today) {
             };
         }
 
-        // Soon: within ~2x threshold or under two weeks of cover.
+        // Soon: stock within ~2.2× threshold OR under 2 weeks of cover.
+        // reorder_by = today + 3 days, meaningful reorder_qty.
         if (current < threshold * 2.2 || weeksLeft < 2) {
-            // Refill to ~2x threshold plus a week of usage cover; always order at
-            // least one full threshold's worth so the card shows a meaningful qty.
             const refillTarget = threshold * 2 + weeklyUse;
             const reorderQty = Math.max(
                 Math.ceil(threshold),
@@ -94,7 +111,8 @@ function buildDemoSuggestions(items, today) {
             };
         }
 
-        // Later / not needed.
+        // Normal: comfortably above threshold with adequate weeks of cover.
+        // reorder_qty = 0; reorder_by = today + 7 for a future review date.
         return {
             item_name: it.name,
             reorder_qty: 0,
@@ -109,7 +127,7 @@ function buildDemoSuggestions(items, today) {
     });
 }
 
-// Strip ```json ... ``` (or plain ``` ... ```) fences that some LLMs wrap JSON in.
+// stripJsonFences: models sometimes wrap JSON in ``` fences; remove before parse.
 function stripJsonFences(text) {
     if (typeof text !== 'string') return text;
     return text
@@ -119,18 +137,17 @@ function stripJsonFences(text) {
         .trim();
 }
 
-// ---------------------------------------------------------------------------
-// POST /api/ai/reorder-suggestions
-// 1. Pulls inventory items for the caller's cafe with 7-day usage.
-// 2. Asks gpt-3.5-turbo for a per-item reorder suggestion.
-// 3. Parses the JSON response (tolerating Markdown fences).
-// 4. Returns { suggestions, items_analysed }.
-// ---------------------------------------------------------------------------
+/**
+ * @route  POST /api/ai/reorder-suggestions
+ * @desc   Return per-item reorder suggestions (OpenAI or offline demo mode)
+ * @access Private (any authenticated role)
+ */
 router.post('/reorder-suggestions', async (req, res) => {
     try {
         const client = getOpenAIClient();
 
-        // --- 1. Inventory + 7-day usage -------------------------------------
+        // Step 1 — Fetch inventory: all items for this café plus supplier name
+        // and used_last_7_days (sum of ABS(negative change_qty) in last 7 days).
         const { rows: items } = await pool.query(
             `SELECT i.item_id,
                     i.name,
@@ -161,10 +178,8 @@ router.post('/reorder-suggestions', async (req, res) => {
 
         const today = new Date().toISOString().slice(0, 10);
 
-        // --- 1b. Demo-mode short-circuit ------------------------------------
-        // No real OpenAI key configured -> serve deterministic demo suggestions
-        // computed from the same data the real prompt would use. Logged on the
-        // server so reviewers know it's running in demo mode.
+        // Step 2 — Demo mode check: no real API key → buildDemoSuggestions from
+        // the same rows we would send to OpenAI; response includes demo: true.
         if (!client) {
             console.log(
                 `[ai/reorder] DEMO MODE (no OPENAI_API_KEY set) - returning ` +
@@ -178,8 +193,8 @@ router.post('/reorder-suggestions', async (req, res) => {
             });
         }
 
-        // --- 2. Build prompt ------------------------------------------------
-
+        // Step 3 — Build prompt: bullet list of inventory + strict JSON schema
+        // so the model returns parseable reorder_qty / reorder_by / reason fields.
         const inventoryLines = items
             .map((it) => {
                 const supplier = it.supplier_name || 'no supplier';
@@ -212,7 +227,7 @@ router.post('/reorder-suggestions', async (req, res) => {
             `  }\n` +
             `]`;
 
-        // --- 3. Call OpenAI -------------------------------------------------
+        // Step 4 — Call OpenAI: gpt-3.5-turbo chat completion, low temperature.
         const completion = await client.chat.completions.create({
             model: 'gpt-3.5-turbo',
             temperature: 0.3,
@@ -230,7 +245,8 @@ router.post('/reorder-suggestions', async (req, res) => {
         const rawContent = completion.choices?.[0]?.message?.content ?? '';
         const cleaned = stripJsonFences(rawContent);
 
-        // --- 4. Parse + normalise -------------------------------------------
+        // Step 5 — Parse response: JSON.parse after fence strip; accept bare
+        // array or { suggestions: [...] }; then return suggestions + items_analysed.
         let parsed;
         try {
             parsed = JSON.parse(cleaned);
@@ -240,7 +256,6 @@ router.post('/reorder-suggestions', async (req, res) => {
             return res.status(500).json({ error: 'AI response was not valid JSON' });
         }
 
-        // Tolerate either a bare array or { suggestions: [...] }
         let suggestions;
         if (Array.isArray(parsed)) {
             suggestions = parsed;
@@ -251,7 +266,6 @@ router.post('/reorder-suggestions', async (req, res) => {
             return res.status(500).json({ error: 'AI response shape was unexpected' });
         }
 
-        // --- 5. Respond -----------------------------------------------------
         return res.json({
             suggestions,
             items_analysed: items.length,
@@ -259,9 +273,10 @@ router.post('/reorder-suggestions', async (req, res) => {
     } catch (err) {
         console.error('[ai/reorder]', err.status || '', err.message || err.code || err);
 
-        // OpenAI SDK errors expose `status` and `code`. Map the common ones to
-        // friendlier messages so the UI can show something actionable.
         const status = err.status || err.response?.status;
+
+        // OpenAI error handling — map HTTP status to actionable UI messages:
+        // 401 = bad or revoked API key (wrong OPENAI_API_KEY in .env).
         if (status === 401) {
             return res.status(503).json({
                 error:
@@ -270,6 +285,7 @@ router.post('/reorder-suggestions', async (req, res) => {
                     'https://platform.openai.com/api-keys.',
             });
         }
+        // 429 = rate limit or billing quota exceeded.
         if (status === 429) {
             return res.status(503).json({
                 error:
@@ -278,6 +294,7 @@ router.post('/reorder-suggestions', async (req, res) => {
                     'try again shortly.',
             });
         }
+        // 404 (model in message) = key valid but gpt-3.5-turbo not available to this account.
         if (status === 404 && /model/i.test(err.message || '')) {
             return res.status(503).json({
                 error:
@@ -285,6 +302,7 @@ router.post('/reorder-suggestions', async (req, res) => {
                     'Try a different model in routes/ai.js.',
             });
         }
+        // 5xx = OpenAI server error; upstream is down, retry later.
         if (status && status >= 500) {
             return res.status(502).json({
                 error: 'OpenAI service is unavailable right now. Try again shortly.',
@@ -301,4 +319,5 @@ router.post('/reorder-suggestions', async (req, res) => {
     }
 });
 
+// Export the router for mounting in index.js: app.use('/api/ai', aiRoutes).
 module.exports = router;
