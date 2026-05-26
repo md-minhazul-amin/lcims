@@ -117,6 +117,8 @@ All `/api/*` routes (except `/api/auth/*`) require `Authorization: Bearer <token
 | GET    | `/api/reports/dashboard`    | any     | KPIs + recent activity |
 | GET    | `/api/reports/usage`        | any     | Per-item usage in date range |
 | POST   | `/api/ai/reorder-suggestions` | any   | Reorder suggestions (OpenAI or demo) |
+| GET    | `/api/alerts`                 | any     | List active low-stock alerts |
+| PATCH  | `/api/alerts/:alert_id/resolve` | any | Mark alert resolved |
 
 ## Viewing the production build
 
@@ -140,7 +142,8 @@ The backend on port 5000 must also be running for any data to load.
 | Symptom | Likely cause |
 | --- | --- |
 | Server crashes with `PostgreSQL connection error` | `DB_PASSWORD` in `.env` is wrong, or service isn't running. Check `Get-Service postgresql-x64-18`. |
-| Login returns 401 | Re-run `lcims_schema.sql` to restore the seeded bcrypt hashes. |
+| Login returns 401 | Run `database/fix_passwords.sql` in pgAdmin, or re-run `lcims_schema.sql`. Seed password is `password123`. |
+| Login shows "Cannot reach the API" | Backend is not running — `cd server` then `npm run dev` (port 5000). |
 | AI Insights shows red error | Either OpenAI rejected the key (replace it in `.env`), or the network is blocked. With no key, demo mode kicks in instead and the page works. |
 | Frontend shows blank page when opening `build/index.html` directly | Expected — see "Viewing the production build" above. |
 | `npm start` doesn't open a browser | Set `BROWSER=none` in the env, or open http://localhost:3000 manually. |
