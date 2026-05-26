@@ -148,13 +148,13 @@ INSERT INTO cafes (name, address) VALUES
 -- These are DEV credentials only - rotate before deploying anywhere real.
 INSERT INTO users (email, password_hash, role, cafe_id) VALUES
     ('manager@dailygrind.com',
-     '$2b$10$4rUD8tsuiOB/wMrRK0KMAelmIdG6FHOSiMdM17eQ1N5U6rjNwsFgy',
+     '$2b$10$t5Md69UkSFukmB7lzkyQ9OVOQvNi5KsTv.QGpFuw748udaeu1uM3W',
      'Manager', 1),
     ('staff@dailygrind.com',
-     '$2b$10$aBFgsH1np3k685KmLGuvK.DkgKkU5EMbVCnzNRHQoWOvnaoj8paLe',
+     '$2b$10$M45tCZbgxUhYKxO3fFJRz.0baMVCawxKHEnv5aV1TBG3aR/fDLb1m',
      'Staff', 1),
     ('admin@lcims.com',
-     '$2b$10$OXIdS4YCebhTvqCih7U/eONz/KBvoTnK/Ne7jDczv/V9aCfqVihXa',
+     '$2b$10$UeE6zBqz1S/skKEuahWi9.dVxsHtwq/s3UPZT.6h1GXQmq0Gbgbm2',
      'Admin', NULL);
 
 -- Link the manager (user_id = 1) as the cafe owner
