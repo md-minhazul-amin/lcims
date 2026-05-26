@@ -42,11 +42,29 @@ export default function Login() {
         setError('');
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/login', { email, password });
+            const { data } = await api.post('/auth/login', {
+                email: email.trim(),
+                password,
+            });
+            if (!data?.token) {
+                setError('Login succeeded but no token was returned. Check the API server.');
+                return;
+            }
             login(data.token);
             navigate('/', { replace: true });
         } catch (err) {
-            setError(err.response?.data?.error || 'Login failed. Please try again.');
+            if (!err.response) {
+                setError(
+                    'Cannot reach the API at http://localhost:5000. Start the backend: cd server → npm run dev'
+                );
+            } else if (err.response.status === 401) {
+                setError(
+                    err.response.data?.error ||
+                        'Invalid email or password. Use manager@dailygrind.com / password123 and run database/fix_passwords.sql if needed.'
+                );
+            } else {
+                setError(err.response.data?.error || 'Login failed. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
