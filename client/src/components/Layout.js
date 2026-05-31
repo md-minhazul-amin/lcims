@@ -22,6 +22,16 @@ const navItems = [
     { to: '/ai-insights', label: 'AI Insights', icon: '🤖' },
 ];
 
+const ROLE_BADGE_CLASS = {
+    Manager: 'lcims-role-badge--manager',
+    Staff:   'lcims-role-badge--staff',
+    Admin:   'lcims-role-badge--admin',
+};
+
+function roleBadgeClass(role) {
+    return ROLE_BADGE_CLASS[role] || 'lcims-role-badge--manager';
+}
+
 export default function Layout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -40,10 +50,20 @@ export default function Layout() {
                     <div className="lcims-brand">☕ LCIMS</div>
                     {user && (
                         <div className="lcims-user-info">
+                            <div
+                                className="lcims-user-avatar"
+                                aria-hidden="true"
+                            >
+                                {user?.email?.[0]?.toUpperCase() || '?'}
+                            </div>
                             <div className="lcims-user-email" title={user.email}>
                                 {user.email}
                             </div>
-                            <span className="lcims-role-badge">{user.role}</span>
+                            <span
+                                className={`lcims-role-badge ${roleBadgeClass(user.role)}`}
+                            >
+                                {user.role}
+                            </span>
                         </div>
                     )}
                 </div>
@@ -64,13 +84,16 @@ export default function Layout() {
                     ))}
                 </nav>
 
-                <button
-                    type="button"
-                    className="lcims-logout"
-                    onClick={handleLogout}
-                >
-                    ⎋ Log out
-                </button>
+                <div className="lcims-sidebar-footer">
+                    <button
+                        type="button"
+                        className="lcims-logout"
+                        onClick={handleLogout}
+                    >
+                        ⎋ Log out
+                    </button>
+                    <div className="lcims-version">LCIMS v1.0</div>
+                </div>
             </aside>
 
             <main className="lcims-main">
