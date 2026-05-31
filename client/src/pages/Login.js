@@ -47,23 +47,17 @@ export default function Login() {
                 password,
             });
             if (!data?.token) {
-                setError('Login succeeded but no token was returned. Check the API server.');
+                setError('Invalid email or password. Please try again.');
                 return;
             }
             login(data.token);
             navigate('/', { replace: true });
         } catch (err) {
-            if (!err.response) {
-                setError(
-                    'Cannot reach the API at http://localhost:5000. Start the backend: cd server → npm run dev'
-                );
-            } else if (err.response.status === 401) {
-                setError(
-                    err.response.data?.error ||
-                        'Invalid email or password. Use manager@dailygrind.com / password123 and run database/fix_passwords.sql if needed.'
-                );
+            // Show a single user-facing message for failed sign-in (no dev/API details).
+            if (!err.response || err.response.status === 401) {
+                setError('Invalid email or password. Please try again.');
             } else {
-                setError(err.response.data?.error || 'Login failed. Please try again.');
+                setError('Unable to sign in right now. Please try again in a moment.');
             }
         } finally {
             setLoading(false);
