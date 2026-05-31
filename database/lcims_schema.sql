@@ -6,12 +6,13 @@
 --   psql -U postgres -c "CREATE DATABASE lcims;"
 --   psql -U postgres -d lcims -f lcims_schema.sql
 --
--- Re-runnable: drops and recreates all six tables inside a transaction.
+-- Re-runnable: drops and recreates all tables inside a transaction.
 -- ============================================================================
 
 BEGIN;
 
 -- Drop in reverse dependency order so re-runs are clean.
+DROP TABLE IF EXISTS order_requests   CASCADE;
 DROP TABLE IF EXISTS alerts           CASCADE;
 DROP TABLE IF EXISTS stock_logs       CASCADE;
 DROP TABLE IF EXISTS inventory_items  CASCADE;
@@ -198,6 +199,36 @@ INSERT INTO alerts (item_id, status) VALUES
     (3, 'active'),   -- Full Cream Milk 2L  (24.00 < 30.00)
     (5, 'active');   -- Butter Croissants   (18.00 < 25.00)
 
+-- ============================================================
+-- Order Requests Table (added per professor feedback - Assessment 6)
+-- Stores supplier reorder requests placed by Managers from the
+-- Suppliers page (POST /api/orders). Added to the canonical schema so
+-- fresh installs do not rely on POST /api/orders/init-table alone.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS order_requests (
+    order_id            SERIAL PRIMARY KEY,
+    cafe_id             INTEGER NOT NULL REFERENCES cafes(cafe_id) ON DELETE CASCADE,
+    supplier_id         INTEGER NOT NULL REFERENCES suppliers(supplier_id) ON DELETE CASCADE,
+    item_id             INTEGER NOT NULL REFERENCES inventory_items(item_id) ON DELETE CASCADE,
+    item_name           TEXT NOT NULL,
+    quantity_requested  NUMERIC(10,2) NOT NULL CHECK (quantity_requested > 0),
+    unit                TEXT NOT NULL,
+    note                TEXT,
+    status              TEXT NOT NULL DEFAULT 'pending'
+                            CHECK (status IN ('pending', 'sent', 'fulfilled')),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for fast lookup of orders by cafe and supplier
+CREATE INDEX IF NOT EXISTS idx_order_requests_cafe     ON order_requests(cafe_id);
+CREATE INDEX IF NOT EXISTS idx_order_requests_supplier ON order_requests(supplier_id);
+
+-- Auto-update updated_at on any row change
+CREATE TRIGGER trg_order_requests_updated_at
+    BEFORE UPDATE ON order_requests
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 COMMIT;
 
 -- ============================================================================
@@ -208,7 +239,8 @@ COMMIT;
 --   UNION ALL SELECT 'suppliers',       COUNT(*) FROM suppliers
 --   UNION ALL SELECT 'inventory_items', COUNT(*) FROM inventory_items
 --   UNION ALL SELECT 'stock_logs',      COUNT(*) FROM stock_logs
---   UNION ALL SELECT 'alerts',          COUNT(*) FROM alerts;
+--   UNION ALL SELECT 'alerts',          COUNT(*) FROM alerts
+--   UNION ALL SELECT 'order_requests',  COUNT(*) FROM order_requests;
 --
--- Expected: 1, 3, 4, 10, 8, 2
+-- Expected: 1, 3, 4, 10, 8, 2, 0
 -- ============================================================================
