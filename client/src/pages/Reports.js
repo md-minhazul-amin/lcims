@@ -39,24 +39,38 @@ const C = {
     line:    '#eef0f2',
     border:  '#cbd2d9',
     bgPanel: '#ffffff',
-    bgHead:  '#f5f7fa',
-    used:    '#c0392b',   // red  -- chart + table
-    restock: '#27ae60',   // green -- chart + table
+    used:    '#e05c5c',
+    restock: '#40b974',
+    usedTd:  '#d64545',
+    restockTd: '#2c9f64',
     lowBg:   '#fce8e6',
     lowFg:   '#a8262b',
 };
 
 const styles = {
+    header: {
+        marginBottom: '1rem',
+    },
     title: {
-        margin: '0 0 1rem',
+        margin: 0,
         fontSize: '1.6rem',
         color: C.ink,
     },
-    formPanel: {
-        background: C.bgPanel,
-        padding: '1.1rem 1.25rem',
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
+    subtitle: {
+        fontSize: '0.85rem',
+        color: '#5d6a78',
+        margin: '0.2rem 0 0',
+    },
+    controlBar: {
+        background: '#ffffff',
+        borderRadius: 12,
+        padding: '1rem 1.25rem',
+        boxShadow: '0 2px 8px rgba(15,30,60,0.08)',
+        border: '1px solid #eef0f2',
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: '1rem',
+        flexWrap: 'wrap',
         marginBottom: '1.25rem',
     },
     formRow: {
@@ -64,135 +78,168 @@ const styles = {
         alignItems: 'flex-end',
         gap: '1rem',
         flexWrap: 'wrap',
+        flex: 1,
     },
     field: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.3rem',
-        fontSize: '0.82rem',
-        color: '#3e4c59',
     },
-    input: {
-        padding: '0.5rem 0.7rem',
-        border: `1px solid ${C.border}`,
-        borderRadius: 6,
-        fontSize: '0.95rem',
+    fieldLabel: {
+        fontSize: '0.78rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        color: '#5d6a78',
+        fontWeight: 600,
+        marginBottom: '0.35rem',
+    },
+    input: (focused) => ({
+        padding: '0.55rem 0.85rem',
+        border: focused ? '1.5px solid #3d6acb' : '1.5px solid #e2e8f0',
+        borderRadius: 8,
+        fontSize: '0.92rem',
         fontFamily: 'inherit',
         background: '#fafbfc',
-    },
-    submitBtn: {
-        background: C.blue,
+        cursor: 'pointer',
+        boxShadow: focused ? '0 0 0 3px rgba(61,106,203,0.12)' : 'none',
+        transition: 'all 0.18s',
+        outline: 'none',
+    }),
+    submitBtn: (hovered) => ({
+        background: 'linear-gradient(90deg, #2f55a5, #3d6acb)',
         color: '#ffffff',
         border: 'none',
-        padding: '0.55rem 1.2rem',
-        borderRadius: 6,
+        padding: '0.6rem 1.4rem',
+        borderRadius: 8,
         fontWeight: 600,
         cursor: 'pointer',
         fontSize: '0.9rem',
-    },
+        boxShadow: hovered
+            ? '0 4px 14px rgba(61,106,203,0.38)'
+            : '0 2px 8px rgba(61,106,203,0.25)',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+        transition: 'transform 0.18s, box-shadow 0.18s',
+        whiteSpace: 'nowrap',
+    }),
     submitBtnDisabled: {
         background: '#9aa5b1',
+        boxShadow: 'none',
+        transform: 'none',
         cursor: 'not-allowed',
     },
     formError: {
         background: C.lowBg,
         color: C.lowFg,
-        border: `1px solid #f4b1ad`,
+        border: '1px solid #f4b1ad',
         padding: '0.5rem 0.75rem',
-        borderRadius: 6,
+        borderRadius: 8,
         marginTop: '0.75rem',
         fontSize: '0.85rem',
+        flexBasis: '100%',
     },
-    kpiGrid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+    statRow: {
+        display: 'flex',
         gap: '1rem',
         marginBottom: '1.25rem',
+        flexWrap: 'wrap',
     },
-    kpiCard: (accent) => ({
-        background: C.bgPanel,
-        borderRadius: 8,
-        borderLeft: `4px solid ${accent}`,
-        padding: '1rem 1.25rem',
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
-        minHeight: 96,
+    miniCard: (accent) => ({
+        background: '#ffffff',
+        borderRadius: 10,
+        padding: '0.85rem 1.1rem',
+        borderLeft: `3px solid ${accent}`,
+        boxShadow: '0 1px 4px rgba(15,30,60,0.07)',
+        flex: '1 1 160px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.2rem',
     }),
-    kpiLabel: {
-        fontSize: '0.78rem',
-        color: C.sub,
+    miniLabel: {
+        fontSize: '0.75rem',
         textTransform: 'uppercase',
-        letterSpacing: '0.04em',
-        marginBottom: '0.3rem',
+        letterSpacing: '0.05em',
+        color: '#7b8794',
     },
-    kpiNumber: {
-        fontSize: '1.9rem',
+    miniValue: {
+        fontSize: '1.6rem',
         fontWeight: 700,
-        color: C.ink,
+        color: '#1e3a5f',
         lineHeight: 1.1,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-    },
-    kpiNumberSmall: {
-        fontSize: '1.2rem',
-        fontWeight: 700,
-        color: C.ink,
-        lineHeight: 1.2,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        marginTop: '0.4rem',
     },
     chartCard: {
-        background: C.bgPanel,
-        padding: '1.1rem 1.25rem',
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
-        marginBottom: '1.25rem',
+        background: '#ffffff',
+        borderRadius: 14,
+        padding: '1.25rem 1rem 0.75rem',
+        boxShadow: '0 2px 8px rgba(15,30,60,0.08)',
+        border: '1px solid #eef0f2',
+        marginBottom: '1rem',
     },
-    chartHeading: {
-        margin: '0 0 0.75rem',
-        fontSize: '1.05rem',
+    chartTitle: {
+        fontSize: '0.9rem',
         fontWeight: 600,
-        color: C.ink,
+        color: '#5d6a78',
+        margin: '0 0 0.5rem',
     },
     tableWrap: {
-        background: C.bgPanel,
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
+        background: '#ffffff',
+        borderRadius: 14,
+        boxShadow: '0 2px 8px rgba(15,30,60,0.08)',
         overflow: 'auto',
+        border: '1px solid #eef0f2',
     },
     table: {
         width: '100%',
         borderCollapse: 'collapse',
     },
+    theadRow: {
+        background: 'linear-gradient(90deg, #f5f8ff, #f0f4f8)',
+    },
     th: (alignRight) => ({
         textAlign: alignRight ? 'right' : 'left',
-        padding: '0.7rem 0.95rem',
-        fontSize: '0.74rem',
-        color: C.sub,
+        padding: '0.85rem 1rem',
+        fontSize: '0.78rem',
+        color: '#5d6a78',
         textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        borderBottom: `1px solid #e4e7eb`,
-        background: C.bgHead,
+        letterSpacing: '0.06em',
+        borderBottom: '2px solid #e2e8f0',
+        background: 'transparent',
         fontWeight: 600,
         whiteSpace: 'nowrap',
     }),
-    td: (alignRight, color) => ({
-        padding: '0.7rem 0.95rem',
+    row: (hovered, isEven, isLast) => ({
+        background: hovered ? '#f7f9ff' : isEven ? '#f9fafc' : '#ffffff',
+        transition: 'background 0.12s',
+    }),
+    td: (alignRight, isLast, color, bold) => ({
+        padding: '0.85rem 1rem',
         color: color || '#1f2933',
         fontSize: '0.9rem',
         textAlign: alignRight ? 'right' : 'left',
         fontVariantNumeric: 'tabular-nums',
-        fontWeight: alignRight ? 600 : 400,
+        fontWeight: bold ? 600 : 400,
+        borderBottom: isLast ? 'none' : '1px solid #f0f2f5',
         whiteSpace: 'nowrap',
-    }),
-    rowBorder: (isLast) => ({
-        borderBottom: isLast ? 'none' : `1px solid ${C.line}`,
     }),
     emptyState: {
         textAlign: 'center',
-        padding: '2.5rem 1rem',
+        padding: '3rem',
+        background: '#f7f9ff',
+        border: '1.5px dashed #cbd2d9',
+        borderRadius: 14,
+    },
+    emptyEmoji: {
+        fontSize: '2.75rem',
+        display: 'block',
+        marginBottom: '0.75rem',
+    },
+    emptyTitle: {
+        margin: '0 0 0.35rem',
+        fontSize: '1.05rem',
+        fontWeight: 600,
+        color: C.ink,
+    },
+    emptySub: {
+        margin: 0,
+        fontSize: '0.85rem',
         color: C.grey,
     },
     loading: { padding: '2rem', color: C.sub },
@@ -234,6 +281,10 @@ export default function Reports() {
     const [loading, setLoading] = useState(false);
     const [error, setError]     = useState('');
 
+    const [submitHovered, setSubmitHovered] = useState(false);
+    const [focusedField, setFocusedField] = useState(null);
+    const [hoveredRowId, setHoveredRowId] = useState(null);
+
     // handleSubmit: fetch usage aggregates; server splits negative change_qty
     // (used) vs positive (total_added / restocked) per item in the window.
     async function handleSubmit(event) {
@@ -256,7 +307,6 @@ export default function Reports() {
 
     const totalUsed     = hasData ? data.reduce((s, r) => s + num(r.total_used),  0) : 0;
     const totalRestocked = hasData ? data.reduce((s, r) => s + num(r.total_added), 0) : 0;
-    const mostUsedItem  = hasData && data.length > 0 ? data[0].name : '—';
 
     // Map API fields to Recharts keys: used / restocked.
     const chartData = hasData
@@ -269,17 +319,22 @@ export default function Reports() {
 
     return (
         <div>
-            <h1 style={styles.title}>📈 Reports</h1>
+            <div style={styles.header}>
+                <h1 style={styles.title}>📈 Reports</h1>
+                <p style={styles.subtitle}>View stock usage and restock activity over time</p>
+            </div>
 
             {/* Date range form ---------------------------------------- */}
-            <form onSubmit={handleSubmit} style={styles.formPanel}>
+            <form onSubmit={handleSubmit} style={styles.controlBar}>
                 <div style={styles.formRow}>
                     <label style={styles.field}>
-                        <span>From Date</span>
+                        <span style={styles.fieldLabel}>From Date</span>
                         <input
                             type="date"
-                            style={styles.input}
+                            style={styles.input(focusedField === 'from')}
                             value={from}
+                            onFocus={() => setFocusedField('from')}
+                            onBlur={() => setFocusedField(null)}
                             onChange={(e) => setFrom(e.target.value)}
                             max={to || undefined}
                             required
@@ -287,11 +342,13 @@ export default function Reports() {
                     </label>
 
                     <label style={styles.field}>
-                        <span>To Date</span>
+                        <span style={styles.fieldLabel}>To Date</span>
                         <input
                             type="date"
-                            style={styles.input}
+                            style={styles.input(focusedField === 'to')}
                             value={to}
+                            onFocus={() => setFocusedField('to')}
+                            onBlur={() => setFocusedField(null)}
                             onChange={(e) => setTo(e.target.value)}
                             min={from || undefined}
                             required
@@ -303,9 +360,11 @@ export default function Reports() {
                         disabled={loading}
                         style={
                             loading
-                                ? { ...styles.submitBtn, ...styles.submitBtnDisabled }
-                                : styles.submitBtn
+                                ? { ...styles.submitBtn(false), ...styles.submitBtnDisabled }
+                                : styles.submitBtn(submitHovered)
                         }
+                        onMouseEnter={() => !loading && setSubmitHovered(true)}
+                        onMouseLeave={() => setSubmitHovered(false)}
                     >
                         {loading ? 'Generating...' : '📊 Generate Report'}
                     </button>
@@ -316,47 +375,37 @@ export default function Reports() {
 
             {/* Results - rendered only after first successful submit -- */}
             {hasData && data.length === 0 && (
-                <div style={{ ...styles.chartCard, ...styles.emptyState }}>
-                    No movement recorded between <strong>{from}</strong> and{' '}
-                    <strong>{to}</strong>.
+                <div style={styles.emptyState}>
+                    <span style={styles.emptyEmoji}>📊</span>
+                    <p style={styles.emptyTitle}>No movement in this period</p>
+                    <p style={styles.emptySub}>
+                        No movement recorded between <strong>{from}</strong> and{' '}
+                        <strong>{to}</strong>
+                    </p>
                 </div>
             )}
 
             {hasData && data.length > 0 && (
                 <>
-                    {/* Summary cards ---------------------------------- */}
-                    <div style={styles.kpiGrid}>
-                        <div style={styles.kpiCard(C.blue)}>
-                            <div style={styles.kpiLabel}>Items Tracked</div>
-                            <div style={styles.kpiNumber}>{data.length}</div>
+                    {/* Summary mini-cards -------------------------------- */}
+                    <div style={styles.statRow}>
+                        <div style={styles.miniCard(C.usedTd)}>
+                            <span style={styles.miniLabel}>Total Used</span>
+                            <span style={styles.miniValue}>{totalUsed.toFixed(2)}</span>
                         </div>
-
-                        <div style={styles.kpiCard(C.used)}>
-                            <div style={styles.kpiLabel}>Total Used</div>
-                            <div style={styles.kpiNumber}>{totalUsed.toFixed(2)}</div>
+                        <div style={styles.miniCard(C.restockTd)}>
+                            <span style={styles.miniLabel}>Total Restocked</span>
+                            <span style={styles.miniValue}>{totalRestocked.toFixed(2)}</span>
                         </div>
-
-                        <div style={styles.kpiCard(C.restock)}>
-                            <div style={styles.kpiLabel}>Total Restocked</div>
-                            <div style={styles.kpiNumber}>{totalRestocked.toFixed(2)}</div>
-                        </div>
-
-                        <div style={styles.kpiCard('#e8830c')}>
-                            <div style={styles.kpiLabel}>Most Used Item</div>
-                            <div
-                                style={styles.kpiNumberSmall}
-                                title={mostUsedItem}
-                            >
-                                {mostUsedItem}
-                            </div>
+                        <div style={styles.miniCard(C.blue)}>
+                            <span style={styles.miniLabel}>Items Tracked</span>
+                            <span style={styles.miniValue}>{data.length}</span>
                         </div>
                     </div>
 
                     {/* Bar chart -------------------------------------- */}
                     <div style={styles.chartCard}>
-                        <h2 style={styles.chartHeading}>
-                            Usage vs Restock per Item
-                        </h2>
+                        <p style={styles.chartTitle}>Stock Movement by Item</p>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart
                                 data={chartData}
@@ -382,8 +431,18 @@ export default function Reports() {
                                     cursor={{ fill: 'rgba(61, 106, 203, 0.08)' }}
                                 />
                                 <Legend wrapperStyle={{ fontSize: '0.85rem' }} />
-                                <Bar dataKey="used"      name="Used"      fill={C.used} />
-                                <Bar dataKey="restocked" name="Restocked" fill={C.restock} />
+                                <Bar
+                                    dataKey="used"
+                                    name="Used"
+                                    fill={C.used}
+                                    radius={[4, 4, 0, 0]}
+                                />
+                                <Bar
+                                    dataKey="restocked"
+                                    name="Restocked"
+                                    fill={C.restock}
+                                    radius={[4, 4, 0, 0]}
+                                />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -392,7 +451,7 @@ export default function Reports() {
                     <div style={styles.tableWrap}>
                         <table style={styles.table}>
                             <thead>
-                                <tr>
+                                <tr style={styles.theadRow}>
                                     <th style={styles.th(false)}>Item</th>
                                     <th style={styles.th(false)}>Category</th>
                                     <th style={styles.th(false)}>Unit</th>
@@ -403,15 +462,37 @@ export default function Reports() {
                             <tbody>
                                 {data.map((r, idx) => {
                                     const isLast = idx === data.length - 1;
+                                    const isEven = idx % 2 === 1;
+                                    const isHover = hoveredRowId === r.item_id;
+
                                     return (
-                                        <tr key={r.item_id} style={styles.rowBorder(isLast)}>
-                                            <td style={styles.td(false)}>{r.name}</td>
-                                            <td style={styles.td(false)}>{r.category}</td>
-                                            <td style={styles.td(false)}>{r.unit}</td>
-                                            <td style={styles.td(true, C.used)}>
+                                        <tr
+                                            key={r.item_id}
+                                            style={styles.row(isHover, isEven, isLast)}
+                                            onMouseEnter={() => setHoveredRowId(r.item_id)}
+                                            onMouseLeave={() => setHoveredRowId(null)}
+                                        >
+                                            <td style={styles.td(false, isLast)}>{r.name}</td>
+                                            <td style={styles.td(false, isLast)}>{r.category}</td>
+                                            <td style={styles.td(false, isLast)}>{r.unit}</td>
+                                            <td
+                                                style={styles.td(
+                                                    true,
+                                                    isLast,
+                                                    C.usedTd,
+                                                    true
+                                                )}
+                                            >
                                                 {num(r.total_used).toFixed(2)}
                                             </td>
-                                            <td style={styles.td(true, C.restock)}>
+                                            <td
+                                                style={styles.td(
+                                                    true,
+                                                    isLast,
+                                                    C.restockTd,
+                                                    true
+                                                )}
+                                            >
                                                 {num(r.total_added).toFixed(2)}
                                             </td>
                                         </tr>
