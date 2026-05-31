@@ -33,6 +33,7 @@ const suppliersRoutes = require('./routes/suppliers');  // /api/suppliers/*  (CR
 const reportsRoutes   = require('./routes/reports');    // /api/reports/*    (dashboard, usage)
 const aiRoutes        = require('./routes/ai');         // /api/ai/*         (OpenAI reorder)
 const alertsRoutes    = require('./routes/alerts');
+const ordersRoutes    = require('./routes/orders');  // /api/orders/* (supplier order requests)
 
 // Create the Express application instance.
 const app = express();
@@ -58,6 +59,8 @@ app.use('/api/reports',   reportsRoutes);
 app.use('/api/ai',        aiRoutes);
 // Alert management routes
 app.use('/api/alerts',    alertsRoutes);
+// Supplier order request routes (added per professor feedback — Assessment 6)
+app.use('/api/orders',    ordersRoutes);
 
 // Catch-all 404 handler. Reached only if no route above matched the URL.
 // Returns a clean JSON error rather than Express's default HTML page.
