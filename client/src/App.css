@@ -1,20 +1,62 @@
 /* ===========================================================================
-   LCIMS - base, app shell, and login styles
+   LCIMS — App shell, login, and shared UI tokens
    =========================================================================== */
 
-* { box-sizing: border-box; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --navy: #1e3a5f;
+    --blue: #3d6acb;
+    --blue-light: #5b9dff;
+    --blue-dk: #2f55a5;
+    --green: #2c9f64;
+    --red: #d64545;
+    --orange: #e8830c;
+    --sub: #5d6a78;
+    --grey: #7b8794;
+    --line: #eef0f2;
+    --border: #cbd2d9;
+    --bg-page: #f0f4f8;
+    --bg-card: #ffffff;
+    --shadow-sm: 0 1px 4px rgba(15, 30, 60, 0.07);
+    --shadow-md: 0 4px 16px rgba(15, 30, 60, 0.11);
+    --shadow-lg: 0 8px 32px rgba(15, 30, 60, 0.16);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --transition: 0.18s ease;
+}
+
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
-    background: #f0f4f8;
+    background: var(--bg-page);
     color: #1f2933;
-    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
-a { color: inherit; text-decoration: none; }
-input, button, textarea, select { font: inherit; }
+a {
+    color: inherit;
+    text-decoration: none;
+}
 
-h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+h1 {
+    font-size: 1.6rem;
+    margin: 0 0 1rem;
+    color: var(--navy);
+}
 
 /* ---------- app shell ---------- */
 
@@ -28,23 +70,24 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
 .lcims-sidebar {
     width: 220px;
     min-width: 220px;
-    background: #1e3a5f;
+    background: linear-gradient(180deg, #1a3356 0%, #1e3a5f 60%, #192f4e 100%);
     color: #e6edf6;
     padding: 1.25rem 0.75rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    box-shadow: 2px 0 16px rgba(15, 30, 60, 0.13);
 }
 
 .lcims-brand-area {
-    padding: 0 0.5rem 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 0.5rem 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .lcims-brand {
     font-size: 1.4rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
     color: #ffffff;
     margin-bottom: 0.6rem;
 }
@@ -65,14 +108,15 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
 
 .lcims-role-badge {
     align-self: flex-start;
-    background: #3d6acb;
+    background: linear-gradient(90deg, #3d6acb, #5b9dff);
     color: #ffffff;
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 0.18rem 0.55rem;
+    padding: 0.2rem 0.6rem;
     border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(61, 106, 203, 0.25);
 }
 
 /* ---------- nav ---------- */
@@ -80,48 +124,62 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
 .lcims-nav {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    flex: 1;                   /* pushes logout button to the bottom */
+    gap: 0.25rem;
+    flex: 1;
 }
 
 .lcims-nav-link {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    padding: 0.6rem 0.85rem;
-    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+    border-radius: var(--radius-sm);
     color: #c5d3e6;
     border-left: 3px solid transparent;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-size: 0.92rem;
+    transition: all var(--transition);
 }
 
 .lcims-nav-link:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
     color: #ffffff;
+    transform: translateX(3px);
 }
 
 .lcims-nav-link.active {
-    background: #2d5078;
+    background: linear-gradient(
+        90deg,
+        rgba(91, 157, 255, 0.18),
+        rgba(61, 106, 203, 0.08)
+    );
+    border-left: 3px solid #5b9dff;
     color: #ffffff;
-    border-left-color: #5b9dff;
+    font-weight: 600;
 }
 
-.lcims-nav-icon { font-size: 1rem; }
+.lcims-nav-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
 
 /* ---------- logout ---------- */
 
 .lcims-logout {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     color: #e6edf6;
-    padding: 0.6rem 0.85rem;
-    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     text-align: left;
+    font-size: 0.92rem;
+    transition: all var(--transition);
 }
+
 .lcims-logout:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
 }
 
 /* ---------- main content ---------- */
@@ -130,8 +188,9 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
     flex: 1;
     min-width: 0;
     padding: 1.75rem 2rem;
-    background: #f0f4f8;
+    background: var(--bg-page);
     overflow: auto;
+    scroll-behavior: smooth;
 }
 
 /* ===========================================================================
@@ -139,25 +198,57 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
    =========================================================================== */
 
 .lcims-login {
+    position: relative;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e3a5f 0%, #3d6acb 60%, #5b9dff 100%);
+    background: linear-gradient(
+        135deg,
+        #0f2440 0%,
+        #1e3a5f 35%,
+        #2d5898 70%,
+        #3d6acb 100%
+    );
     padding: 2rem;
+    overflow: hidden;
+}
+
+/* Subtle depth pattern behind the login card */
+.lcims-login::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(91, 157, 255, 0.22) 0%, transparent 42%),
+        radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.08) 0%, transparent 38%),
+        radial-gradient(circle at 50% 100%, rgba(15, 36, 64, 0.35) 0%, transparent 55%);
+    pointer-events: none;
 }
 
 .lcims-login-card {
+    position: relative;
+    z-index: 1;
     width: 360px;
     max-width: 100%;
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 2rem 2rem 1.5rem;
-    border-radius: 14px;
-    box-shadow: 0 20px 40px rgba(15, 30, 60, 0.35);
+    border-radius: 20px;
+    box-shadow:
+        0 24px 64px rgba(10, 20, 50, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(2px);
+    transition: box-shadow var(--transition);
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
     text-align: center;
+}
+
+.lcims-login-card:hover {
+    box-shadow:
+        0 32px 80px rgba(10, 20, 50, 0.48),
+        0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .lcims-login-icon {
@@ -168,13 +259,14 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
 .lcims-login-title {
     font-size: 1.8rem;
     margin: 0;
-    color: #1e3a5f;
+    color: var(--navy);
     letter-spacing: 0.03em;
+    font-weight: 700;
 }
 
 .lcims-login-sub {
     margin: 0 0 0.5rem;
-    color: #5d6a78;
+    color: var(--sub);
     font-size: 0.9rem;
 }
 
@@ -185,43 +277,59 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
     text-align: left;
     font-size: 0.85rem;
     color: #3e4c59;
+    font-weight: 500;
 }
 
 .lcims-login-field input {
-    padding: 0.6rem 0.75rem;
-    border: 1px solid #cbd2d9;
-    border-radius: 6px;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     font-size: 0.95rem;
     background: #fafbfc;
+    transition: all 0.2s ease;
 }
+
 .lcims-login-field input:focus {
     outline: none;
-    border-color: #3d6acb;
+    border-color: var(--blue);
     background: #ffffff;
     box-shadow: 0 0 0 3px rgba(61, 106, 203, 0.18);
 }
 
 .lcims-login-submit {
     margin-top: 0.4rem;
-    padding: 0.7rem;
-    background: #1e3a5f;
+    padding: 0.75rem;
+    background: linear-gradient(90deg, #1e3a5f, #3d6acb);
     color: #ffffff;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s;
+    box-shadow: 0 4px 14px rgba(61, 106, 203, 0.35);
+    transition: all 0.2s ease;
 }
-.lcims-login-submit:hover:not(:disabled) { background: #2d5078; }
+
+.lcims-login-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(61, 106, 203, 0.45);
+}
+
+.lcims-login-submit:active:not(:disabled) {
+    transform: translateY(0);
+}
+
 .lcims-login-submit:disabled {
-    background: #9aa5b1;
+    background: linear-gradient(90deg, #9aa5b1, #b0bac5);
+    box-shadow: none;
     cursor: not-allowed;
+    transform: none;
 }
 
 .lcims-login-footer {
     margin: 0.5rem 0 0;
     font-size: 0.78rem;
-    color: #8b95a3;
+    color: var(--grey);
+    line-height: 1.45;
 }
 
 /* ---------- shared error block (login + future forms) ---------- */
@@ -231,7 +339,143 @@ h1 { font-size: 1.6rem; margin: 0 0 1rem; color: #1e3a5f; }
     color: #a8262b;
     border: 1px solid #f4b1ad;
     padding: 0.55rem 0.75rem;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 0.85rem;
     text-align: left;
+    line-height: 1.4;
+}
+
+/* ===========================================================================
+   Utility classes
+   =========================================================================== */
+
+.lcims-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+}
+
+.lcims-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 1.25rem 1.5rem;
+    transition: box-shadow var(--transition);
+}
+
+.lcims-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.lcims-badge-blue {
+    background: #eaf1ff;
+    color: #2745a4;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.lcims-badge-red {
+    background: #fce8e6;
+    color: #a8262b;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.lcims-badge-green {
+    background: #dff5e6;
+    color: #1d703f;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.lcims-btn-primary {
+    background: linear-gradient(90deg, #2f55a5, #3d6acb);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.18s ease;
+    box-shadow: 0 2px 8px rgba(61, 106, 203, 0.2);
+}
+
+.lcims-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(61, 106, 203, 0.32);
+}
+
+.lcims-btn-danger {
+    background: #fff0f0;
+    color: #a8262b;
+    border: 1px solid #f4b1ad;
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.lcims-btn-danger:hover {
+    background: #fce8e6;
+}
+
+/* ---------- animations ---------- */
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.lcims-animate-in {
+    animation: fadeInDown 0.25s ease both;
+}
+
+.lcims-animate-up {
+    animation: fadeInUp 0.25s ease both;
 }
