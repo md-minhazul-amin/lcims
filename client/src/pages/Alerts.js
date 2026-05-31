@@ -59,27 +59,43 @@ const styles = {
     },
     subtitle: {
         margin: 0,
-        fontSize: '0.95rem',
-        color: C.sub,
+        fontSize: '0.85rem',
+        color: '#5d6a78',
         lineHeight: 1.5,
         maxWidth: 560,
     },
-    refreshBtn: {
-        background: C.blue,
-        color: '#ffffff',
-        border: 'none',
-        padding: '0.55rem 1rem',
-        borderRadius: 6,
+    refreshBtn: (hovered) => ({
+        background: hovered ? '#eaf1ff' : 'transparent',
+        color: '#3d6acb',
+        border: '1.5px solid #3d6acb',
+        padding: '0.45rem 1rem',
+        borderRadius: 8,
         fontWeight: 600,
         cursor: 'pointer',
         fontSize: '0.9rem',
         whiteSpace: 'nowrap',
         flexShrink: 0,
-    },
+        transition: 'background 0.15s',
+    }),
     refreshBtnDisabled: {
-        background: '#9aa5b1',
+        opacity: 0.55,
         cursor: 'not-allowed',
     },
+    summaryBar: (healthy) => ({
+        background: healthy
+            ? '#dff5e6'
+            : 'linear-gradient(90deg, #fff4e6, #fce8e6)',
+        color: healthy ? '#1d703f' : '#a8262b',
+        border: `1px solid ${healthy ? '#6fcf97' : '#f4b1ad'}`,
+        borderRadius: 10,
+        padding: '0.75rem 1.1rem',
+        fontWeight: 600,
+        fontSize: '0.92rem',
+        marginBottom: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+    }),
     loading: {
         padding: '2rem',
         color: C.sub,
@@ -90,19 +106,31 @@ const styles = {
         color: C.lowFg,
         border: '1px solid #f4b1ad',
         padding: '0.75rem 1rem',
-        borderRadius: 6,
+        borderRadius: 10,
         marginBottom: '1rem',
     },
     emptyState: {
         textAlign: 'center',
-        padding: '2.5rem 1.5rem',
-        background: C.bgPanel,
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
-        color: C.okFg,
-        fontSize: '1rem',
-        fontWeight: 500,
-        lineHeight: 1.6,
+        padding: '3rem',
+        background: '#f7f9ff',
+        border: '1.5px dashed #cbd2d9',
+        borderRadius: 14,
+    },
+    emptyEmoji: {
+        fontSize: '2.75rem',
+        display: 'block',
+        marginBottom: '0.75rem',
+    },
+    emptyTitle: {
+        margin: '0 0 0.35rem',
+        fontSize: '1.05rem',
+        fontWeight: 600,
+        color: C.ink,
+    },
+    emptySub: {
+        margin: 0,
+        fontSize: '0.85rem',
+        color: C.grey,
     },
     grid: {
         display: 'grid',
@@ -110,85 +138,115 @@ const styles = {
         gap: '1rem',
     },
     card: {
-        background: C.bgPanel,
-        borderRadius: 8,
-        padding: '1.15rem 1.25rem',
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
-        borderLeft: `4px solid ${C.lowFg}`,
+        background: '#ffffff',
+        borderRadius: 16,
+        overflow: 'hidden',
+        boxShadow: '0 2px 10px rgba(15,30,60,0.08)',
+        border: '1px solid #eef0f2',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.75rem',
+    },
+    accentBar: {
+        height: 5,
+        background: 'linear-gradient(90deg, #d64545, #f08080)',
+        flexShrink: 0,
+    },
+    cardBody: {
+        padding: '1rem 1.25rem',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
     },
     cardHead: {
         display: 'flex',
-        alignItems: 'flex-start',
         justifyContent: 'space-between',
-        gap: '0.65rem',
+        alignItems: 'flex-start',
+        gap: '0.5rem',
     },
     itemName: {
         margin: 0,
-        fontSize: '1.1rem',
+        fontSize: '1rem',
         fontWeight: 700,
-        color: C.ink,
+        color: '#1e3a5f',
         flex: 1,
+        minWidth: 0,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
     },
     badgeLow: {
-        background: C.lowBg,
-        color: C.lowFg,
-        padding: '0.22rem 0.6rem',
+        background: '#fce8e6',
+        color: '#a8262b',
+        padding: '0.18rem 0.7rem',
         borderRadius: 999,
-        fontSize: '0.72rem',
+        fontSize: '0.7rem',
         fontWeight: 700,
-        letterSpacing: '0.04em',
+        letterSpacing: '0.05em',
         whiteSpace: 'nowrap',
         flexShrink: 0,
     },
     badgeCategory: {
-        alignSelf: 'flex-start',
-        background: C.catBg,
-        color: C.catFg,
-        padding: '0.2rem 0.65rem',
+        background: '#eaf1ff',
+        color: '#2745a4',
+        padding: '0.18rem 0.65rem',
         borderRadius: 999,
-        fontSize: '0.78rem',
+        fontSize: '0.75rem',
         fontWeight: 600,
+        display: 'inline-block',
+        margin: '0.4rem 0',
+        alignSelf: 'flex-start',
     },
-    qtyLine: {
-        margin: 0,
-        fontSize: '0.92rem',
-        color: '#3e4c59',
+    meterTrack: {
+        height: 6,
+        background: '#eef0f2',
+        borderRadius: 999,
+        margin: '0.55rem 0',
+        overflow: 'hidden',
+    },
+    meterFill: (pct) => ({
+        height: '100%',
+        width: `${pct}%`,
+        borderRadius: 999,
+        background: '#d64545',
+        transition: 'width 0.6s ease',
+    }),
+    stockText: {
+        margin: '0 0 0.35rem',
+        fontSize: '0.85rem',
+        color: '#a8262b',
+        fontWeight: 600,
         fontVariantNumeric: 'tabular-nums',
     },
-    qtyHighlight: {
-        color: C.lowFg,
-        fontWeight: 600,
-    },
     triggered: {
-        margin: 0,
-        fontSize: '0.82rem',
-        color: C.grey,
+        margin: '0 0 0.85rem',
+        fontSize: '0.78rem',
+        color: '#7b8794',
     },
-    resolveBtn: {
-        alignSelf: 'flex-start',
-        background: '#ffffff',
-        color: C.blue,
-        border: `1px solid ${C.blue}`,
-        padding: '0.45rem 0.95rem',
-        borderRadius: 6,
+    resolveBtn: (hovered) => ({
+        background: 'linear-gradient(90deg, #2c9f64, #40b974)',
+        color: '#ffffff',
+        border: 'none',
+        borderRadius: 9,
+        padding: '0.65rem',
         fontWeight: 600,
         cursor: 'pointer',
-        fontSize: '0.85rem',
-    },
+        fontSize: '0.88rem',
+        width: '100%',
+        boxShadow: hovered
+            ? '0 4px 14px rgba(44,159,100,0.38)'
+            : '0 2px 8px rgba(44,159,100,0.25)',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+        transition: 'transform 0.18s, box-shadow 0.18s',
+    }),
     resolveBtnDisabled: {
         opacity: 0.55,
         cursor: 'not-allowed',
+        transform: 'none',
     },
     cardError: {
         fontSize: '0.82rem',
         color: C.lowFg,
-        margin: 0,
+        margin: '0 0 0.5rem',
     },
 };
 
@@ -207,13 +265,20 @@ function formatTriggeredAt(iso) {
     });
 }
 
-function formatQtyPair(quantity, threshold, unit) {
+function formatStockRemaining(quantity, threshold, unit) {
     const q = parseFloat(quantity);
     const t = parseFloat(threshold);
     const qStr = Number.isFinite(q) ? q.toFixed(2) : String(quantity ?? '—');
     const tStr = Number.isFinite(t) ? t.toFixed(2) : String(threshold ?? '—');
-    const u = unit ? ` ${unit}` : '';
-    return `${qStr}${u} / threshold: ${tStr}${u}`;
+    const u = unit || '';
+    return `${qStr} ${u} remaining / threshold: ${tStr} ${u}`.trim();
+}
+
+function stockFillPct(quantity, threshold) {
+    const q = parseFloat(quantity);
+    const t = parseFloat(threshold);
+    if (!Number.isFinite(q) || !Number.isFinite(t) || t <= 0) return 100;
+    return Math.min((q / t) * 100, 100);
 }
 
 // --- page --------------------------------------------------------------------
@@ -225,6 +290,9 @@ export default function Alerts() {
     const [refreshing, setRefreshing] = useState(false);
     const [resolvingId, setResolvingId] = useState(null);
     const [resolveErrors, setResolveErrors] = useState({});
+
+    const [refreshHovered, setRefreshHovered] = useState(false);
+    const [resolveHoveredId, setResolveHoveredId] = useState(null);
 
     // fetchAlerts: GET /api/alerts — expects array of alert rows with item fields.
     const fetchAlerts = useCallback(async (isRefresh = false) => {
@@ -284,6 +352,8 @@ export default function Alerts() {
     }
 
     const busy = loading || refreshing;
+    const count = alerts.length;
+    const showSummary = !loading && !error;
 
     return (
         <div>
@@ -292,8 +362,7 @@ export default function Alerts() {
                 <div style={styles.titleBlock}>
                     <h1 style={styles.title}>🔔 Low Stock Alerts</h1>
                     <p style={styles.subtitle}>
-                        Items that have dropped below their reorder threshold.
-                        Resolve an alert once stock has been restocked.
+                        Items that have dropped below their reorder threshold
                     </p>
                 </div>
                 <button
@@ -302,9 +371,11 @@ export default function Alerts() {
                     disabled={busy}
                     style={
                         busy
-                            ? { ...styles.refreshBtn, ...styles.refreshBtnDisabled }
-                            : styles.refreshBtn
+                            ? { ...styles.refreshBtn(false), ...styles.refreshBtnDisabled }
+                            : styles.refreshBtn(refreshHovered)
                     }
+                    onMouseEnter={() => !busy && setRefreshHovered(true)}
+                    onMouseLeave={() => setRefreshHovered(false)}
                 >
                     {refreshing ? 'Refreshing...' : '↻ Refresh'}
                 </button>
@@ -320,10 +391,36 @@ export default function Alerts() {
                 <div style={styles.error}>{error}</div>
             )}
 
+            {/* Alert count summary ------------------------------------------ */}
+            {showSummary && (
+                <div style={styles.summaryBar(count === 0)}>
+                    {count === 0 ? (
+                        <>
+                            <span>✅</span>
+                            <span>
+                                All stock levels are healthy — no alerts at this time
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <span>⚠️</span>
+                            <span>
+                                {count} active alert{count !== 1 ? 's' : ''} require attention
+                            </span>
+                        </>
+                    )}
+                </div>
+            )}
+
             {/* Empty (healthy stock) ---------------------------------------- */}
             {!loading && !error && alerts.length === 0 && (
                 <div style={styles.emptyState}>
-                    No active alerts — all stock levels are healthy ✅
+                    <span style={styles.emptyEmoji}>✅</span>
+                    <p style={styles.emptyTitle}>All clear — no low stock alerts</p>
+                    <p style={styles.emptySub}>
+                        Items will appear here when quantity drops below the reorder
+                        threshold
+                    </p>
                 </div>
             )}
 
@@ -333,56 +430,69 @@ export default function Alerts() {
                     {alerts.map((alert) => {
                         const isResolving = resolvingId === alert.alert_id;
                         const cardErr = resolveErrors[alert.alert_id];
+                        const fillPct = stockFillPct(alert.quantity, alert.threshold);
+                        const resolveHover = resolveHoveredId === alert.alert_id;
 
                         return (
                             <article key={alert.alert_id} style={styles.card}>
-                                <div style={styles.cardHead}>
-                                    <h2 style={styles.itemName} title={alert.item_name}>
-                                        {alert.item_name || 'Unknown item'}
-                                    </h2>
-                                    <span style={styles.badgeLow}>LOW STOCK</span>
-                                </div>
+                                <div style={styles.accentBar} />
 
-                                {alert.category && (
-                                    <span style={styles.badgeCategory}>
-                                        {alert.category}
-                                    </span>
-                                )}
+                                <div style={styles.cardBody}>
+                                    <div style={styles.cardHead}>
+                                        <h2 style={styles.itemName} title={alert.item_name}>
+                                            {alert.item_name || 'Unknown item'}
+                                        </h2>
+                                        <span style={styles.badgeLow}>LOW STOCK</span>
+                                    </div>
 
-                                <p style={styles.qtyLine}>
-                                    <span style={styles.qtyHighlight}>
-                                        {formatQtyPair(
+                                    {alert.category && (
+                                        <span style={styles.badgeCategory}>
+                                            {alert.category}
+                                        </span>
+                                    )}
+
+                                    <div style={styles.meterTrack}>
+                                        <div style={styles.meterFill(fillPct)} />
+                                    </div>
+
+                                    <p style={styles.stockText}>
+                                        {formatStockRemaining(
                                             alert.quantity,
                                             alert.threshold,
                                             alert.unit
                                         )}
-                                    </span>
-                                </p>
+                                    </p>
 
-                                <p style={styles.triggered}>
-                                    Alert triggered:{' '}
-                                    {formatTriggeredAt(alert.triggered_at)}
-                                </p>
+                                    <p style={styles.triggered}>
+                                        Alert triggered:{' '}
+                                        {formatTriggeredAt(alert.triggered_at)}
+                                    </p>
 
-                                {cardErr && (
-                                    <p style={styles.cardError}>{cardErr}</p>
-                                )}
+                                    {cardErr && (
+                                        <p style={styles.cardError}>{cardErr}</p>
+                                    )}
 
-                                <button
-                                    type="button"
-                                    onClick={() => handleResolve(alert.alert_id)}
-                                    disabled={isResolving}
-                                    style={
-                                        isResolving
-                                            ? {
-                                                  ...styles.resolveBtn,
-                                                  ...styles.resolveBtnDisabled,
-                                              }
-                                            : styles.resolveBtn
-                                    }
-                                >
-                                    {isResolving ? 'Resolving...' : 'Mark Resolved'}
-                                </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleResolve(alert.alert_id)}
+                                        disabled={isResolving}
+                                        style={
+                                            isResolving
+                                                ? {
+                                                      ...styles.resolveBtn(false),
+                                                      ...styles.resolveBtnDisabled,
+                                                  }
+                                                : styles.resolveBtn(resolveHover)
+                                        }
+                                        onMouseEnter={() =>
+                                            !isResolving &&
+                                            setResolveHoveredId(alert.alert_id)
+                                        }
+                                        onMouseLeave={() => setResolveHoveredId(null)}
+                                    >
+                                        {isResolving ? 'Resolving...' : 'Mark Resolved'}
+                                    </button>
+                                </div>
                             </article>
                         );
                     })}
