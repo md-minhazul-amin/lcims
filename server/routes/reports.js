@@ -184,5 +184,46 @@ router.get('/usage', async (req, res) => {
     }
 });
 
+/**
+ * @route  GET /api/reports/notifications
+ * @desc   Returns all active low-stock alerts for the manager's cafe
+ *         to display as popup notifications on the Dashboard on login.
+ * @access Private (any authenticated role)
+ */
+router.get('/notifications', async (req, res) => {
+    // café scope from JWT — same tenant isolation as /dashboard and /usage.
+    const cafeId = req.user.cafe_id;
+
+    try {
+        // Step 1: JOIN alerts → inventory_items so each row includes live stock
+        // fields (name, category, unit, quantity, threshold) for popup text.
+        // Step 2: WHERE status = 'active' — only unresolved low-stock events.
+        // Step 3: AND i.cafe_id = $1 — caller cannot see another café's alerts.
+        // Step 4: ORDER BY triggered_at DESC — newest notifications first.
+        const result = await pool.query(
+            `SELECT a.alert_id,
+                    a.item_id,
+                    i.name     AS item_name,
+                    i.category,
+                    i.unit,
+                    i.quantity,
+                    i.threshold,
+                    a.triggered_at
+             FROM alerts a
+             INNER JOIN inventory_items i ON i.item_id = a.item_id
+             WHERE a.status = 'active'
+               AND i.cafe_id = $1
+             ORDER BY a.triggered_at DESC`,
+            [cafeId]
+        );
+
+        // JSON array — empty when no active alerts (Dashboard shows no popups).
+        res.json(result.rows);
+    } catch (err) {
+        console.error('[reports] GET /notifications', err.message || err.code);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Export the router for mounting in index.js: app.use('/api/reports', reportsRoutes).
 module.exports = router;
