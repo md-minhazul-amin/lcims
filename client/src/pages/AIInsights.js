@@ -31,74 +31,111 @@ const C = {
     line:    '#eef0f2',
     border:  '#cbd2d9',
     bgPanel: '#ffffff',
-    bgQty:   '#eaf1ff',
-    fgQty:   '#1e3a5f',
     okBg:    '#dff5e6',
     okFg:    '#1d703f',
     okLine:  '#b6e3c8',
     lowBg:   '#fce8e6',
     lowFg:   '#a8262b',
-    warnBg:  '#fff3df',
-    warnFg:  '#8a5300',
+    warnBg:  '#fff4e6',
+    warnFg:  '#b45309',
     info:    '#eaf1ff',
     infoFg:  '#2745a4',
 };
 
+const ACCENT_GRADIENTS = {
+    urgent: 'linear-gradient(90deg, #d64545, #f08080)',
+    soon:   'linear-gradient(90deg, #e8830c, #f5a623)',
+    normal: 'linear-gradient(90deg, #2c9f64, #52d68a)',
+};
+
+const METER_COLORS = {
+    urgent: '#d64545',
+    soon:   '#e8830c',
+    normal: '#2c9f64',
+};
+
+const BADGE_STYLES = {
+    urgent: { bg: '#fce8e6', fg: '#a8262b', text: 'URGENT' },
+    soon:   { bg: '#fff4e6', fg: '#b45309', text: 'ORDER SOON' },
+    normal: { bg: '#dff5e6', fg: '#1d703f', text: 'STOCKED' },
+};
+
+const METER_FALLBACK_PCT = { urgent: 18, soon: 48, normal: 88 };
+
 const styles = {
+    header: {
+        marginBottom: '1.25rem',
+    },
     title: {
-        margin: '0 0 0.3rem',
+        margin: 0,
         fontSize: '1.6rem',
         color: C.ink,
     },
     subtitle: {
-        margin: '0 0 1.25rem',
-        color: C.sub,
-        fontSize: '0.95rem',
+        fontSize: '0.88rem',
+        color: '#5d6a78',
+        maxWidth: 520,
+        marginTop: '0.3rem',
+        marginBottom: 0,
+        lineHeight: 1.5,
     },
-    generateCard: {
-        background: '#ffffff',
-        borderRadius: 12,
-        padding: '2rem 2.25rem',
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
-        marginBottom: '1.25rem',
-        textAlign: 'center',
-        maxWidth: 720,
-        marginLeft: 'auto',
-        marginRight: 'auto',
-    },
-    brain: {
-        fontSize: '3rem',
-        lineHeight: 1,
-        marginBottom: '0.5rem',
-    },
-    genHeading: {
-        margin: '0 0 0.5rem',
-        fontSize: '1.25rem',
-        fontWeight: 600,
-        color: C.ink,
-    },
-    genExplain: {
-        margin: '0 auto 1.25rem',
-        maxWidth: 540,
-        color: C.sub,
-        fontSize: '0.92rem',
-        lineHeight: 1.55,
-    },
-    genBtn: {
-        background: `linear-gradient(135deg, ${C.blueDk} 0%, ${C.blue} 100%)`,
+    heroBanner: {
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5898 50%, #3d6acb 100%)',
+        borderRadius: 16,
+        padding: '1.75rem 2rem',
+        marginBottom: '1.5rem',
+        boxShadow: '0 4px 20px rgba(15,30,60,0.20)',
         color: '#ffffff',
-        border: 'none',
-        padding: '0.75rem 1.6rem',
-        borderRadius: 8,
-        fontWeight: 600,
-        fontSize: '0.95rem',
-        cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(30, 58, 95, 0.25)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1.5rem',
+        flexWrap: 'wrap',
     },
+    heroLeft: {
+        flex: '1 1 240px',
+        minWidth: 0,
+    },
+    heroHeading: {
+        margin: '0 0 0.35rem',
+        fontSize: '1.1rem',
+        fontWeight: 600,
+        color: '#ffffff',
+    },
+    heroSubtext: {
+        margin: 0,
+        fontSize: '0.83rem',
+        color: 'rgba(255,255,255,0.75)',
+        lineHeight: 1.45,
+    },
+    genBtn: (hovered) => ({
+        background: hovered ? '#f0f4f8' : '#ffffff',
+        color: '#1e3a5f',
+        border: 'none',
+        borderRadius: 10,
+        padding: '0.75rem 1.75rem',
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontSize: '0.95rem',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+        transition: 'background 0.18s, transform 0.18s',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+    }),
     genBtnDisabled: {
-        background: '#9aa5b1',
+        opacity: 0.85,
         cursor: 'wait',
-        boxShadow: 'none',
+        transform: 'none',
+    },
+    spinner: {
+        display: 'inline-block',
+        animation: 'spin 0.9s linear infinite',
+        fontSize: '1.1rem',
+        lineHeight: 1,
     },
     successMsg: {
         marginTop: '1rem',
@@ -106,110 +143,175 @@ const styles = {
         color: C.okFg,
         border: `1px solid ${C.okLine}`,
         padding: '0.55rem 0.85rem',
-        borderRadius: 6,
+        borderRadius: 8,
         fontSize: '0.88rem',
         display: 'inline-block',
     },
     errorBox: {
         background: C.lowBg,
         color: C.lowFg,
-        border: `1px solid #f4b1ad`,
+        border: '1px solid #f4b1ad',
         padding: '0.75rem 1rem',
-        borderRadius: 6,
+        borderRadius: 10,
         marginBottom: '1.25rem',
-        maxWidth: 720,
-        marginLeft: 'auto',
-        marginRight: 'auto',
+        fontSize: '0.88rem',
     },
     grid: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         gap: '1rem',
         marginBottom: '1.25rem',
     },
-    card: {
-        background: C.bgPanel,
-        borderRadius: 8,
-        padding: '1.15rem 1.3rem 1.1rem',
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
+    card: (hovered) => ({
+        background: '#ffffff',
+        borderRadius: 16,
+        overflow: 'hidden',
+        boxShadow: hovered
+            ? '0 8px 28px rgba(15,30,60,0.13)'
+            : '0 2px 10px rgba(15,30,60,0.08)',
+        border: '1px solid #eef0f2',
+        transition: 'box-shadow 0.18s, transform 0.18s',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.85rem',
+    }),
+    accentBar: (tier) => ({
+        height: 5,
+        background: ACCENT_GRADIENTS[tier],
+        flexShrink: 0,
+    }),
+    cardHeader: {
+        padding: '1rem 1.25rem 0.75rem',
     },
-    cardHead: {
+    cardNameRow: {
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'space-between',
-        gap: '0.75rem',
+        gap: '0.5rem',
     },
     cardName: {
         margin: 0,
-        fontSize: '1.05rem',
+        fontSize: '1rem',
         fontWeight: 700,
-        color: C.ink,
+        color: '#1e3a5f',
         flex: 1,
+        minWidth: 0,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
     },
-    urgency: (tone) => ({
-        background: tone.bg,
-        color: tone.fg,
-        padding: '0.22rem 0.7rem',
+    urgencyBadge: (tier) => ({
+        background: BADGE_STYLES[tier].bg,
+        color: BADGE_STYLES[tier].fg,
+        padding: '0.15rem 0.65rem',
         borderRadius: 999,
-        fontSize: '0.78rem',
-        fontWeight: 600,
+        fontSize: '0.68rem',
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
         whiteSpace: 'nowrap',
         flexShrink: 0,
     }),
-    qtyBox: {
-        background: C.bgQty,
-        borderRadius: 8,
-        padding: '0.7rem 0.95rem',
+    meterTrack: {
+        height: 6,
+        background: '#eef0f2',
+        borderRadius: 999,
+        margin: '0.6rem 0',
+        overflow: 'hidden',
+    },
+    meterFill: (pct, tier) => ({
+        height: '100%',
+        width: `${pct}%`,
+        borderRadius: 999,
+        background: METER_COLORS[tier],
+        transition: 'width 0.6s ease',
+    }),
+    stockDetailsRow: {
         display: 'flex',
-        alignItems: 'baseline',
         justifyContent: 'space-between',
-        gap: '0.75rem',
+        fontSize: '0.82rem',
+        color: '#5d6a78',
+        marginBottom: '0.65rem',
+        gap: '0.5rem',
     },
-    qtyLabel: {
-        fontSize: '0.75rem',
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        color: C.fgQty,
-        opacity: 0.75,
+    divider: {
+        height: 1,
+        background: '#f0f2f5',
+        margin: '0 1.25rem',
     },
-    qtyValue: {
-        fontSize: '1.4rem',
-        fontWeight: 700,
-        color: C.fgQty,
-        fontVariantNumeric: 'tabular-nums',
+    cardFooter: {
+        padding: '0.85rem 1.25rem',
     },
-    reason: {
+    suggestionText: {
         margin: 0,
-        color: '#3e4c59',
         fontSize: '0.88rem',
-        lineHeight: 1.55,
+        color: '#3e4c59',
+        lineHeight: 1.5,
+        fontStyle: 'italic',
         display: 'flex',
-        gap: '0.55rem',
+        gap: '0.4rem',
         alignItems: 'flex-start',
     },
-    reasonIcon: { flexShrink: 0 },
+    suggestionIcon: {
+        flexShrink: 0,
+        fontStyle: 'normal',
+    },
+    preGenerateEmpty: {
+        background: 'linear-gradient(135deg, #f7f9ff, #eaf1ff)',
+        borderRadius: 20,
+        padding: '3.5rem 2rem',
+        textAlign: 'center',
+        border: '1.5px dashed #3d6acb',
+        marginBottom: '1.25rem',
+    },
+    preGenerateEmoji: {
+        fontSize: '3rem',
+        display: 'block',
+        marginBottom: '0.75rem',
+    },
+    preGenerateTitle: {
+        margin: '0 0 0.4rem',
+        fontSize: '1.15rem',
+        fontWeight: 600,
+        color: C.ink,
+    },
+    preGenerateSub: {
+        margin: '0 0 1rem',
+        fontSize: '0.88rem',
+        color: C.grey,
+    },
+    arrowUp: {
+        fontSize: '1.75rem',
+        color: C.blue,
+        lineHeight: 1,
+        animation: 'fadeInUp 0.6s ease both',
+    },
+    emptyResults: {
+        textAlign: 'center',
+        padding: '2.5rem',
+        background: '#f7f9ff',
+        border: '1.5px dashed #cbd2d9',
+        borderRadius: 14,
+        color: C.grey,
+        marginBottom: '1.25rem',
+    },
+    skeleton: {
+        background: '#f0f4f8',
+        borderRadius: 16,
+        height: 180,
+        animation: 'pulse 1.5s ease infinite',
+    },
     infoBox: {
         background: C.info,
         color: C.infoFg,
-        border: `1px solid #c8d6f3`,
+        border: '1px solid #c8d6f3',
         padding: '0.85rem 1.1rem',
-        borderRadius: 8,
+        borderRadius: 12,
         fontSize: '0.85rem',
         lineHeight: 1.5,
         display: 'flex',
         gap: '0.65rem',
         alignItems: 'flex-start',
-    },
-    emptyState: {
-        textAlign: 'center',
-        color: C.grey,
-        padding: '2rem',
     },
 };
 
@@ -248,6 +350,72 @@ function computeUrgency(suggestion) {
     return            { ...LATER,  text: `In ${days} days` };
 }
 
+// Display-only: map computeUrgency tone colours to card accent tier (logic unchanged).
+function urgencyTier(tone) {
+    if (tone.bg === C.lowBg) return 'urgent';
+    if (tone.bg === C.warnBg) return 'soon';
+    return 'normal';
+}
+
+// Display-only: parse current/threshold from AI reason text when present.
+function parseStockFromReason(reason) {
+    if (!reason || typeof reason !== 'string') return null;
+
+    const slash = reason.match(
+        /(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*([a-zA-Z][\w\s]*?)(?=[,;.)]|$)/i
+    );
+    if (slash) {
+        return {
+            quantity: parseFloat(slash[1]),
+            threshold: parseFloat(slash[2]),
+            unit: slash[3].trim(),
+        };
+    }
+
+    const current = reason.match(/currently\s+(\d+(?:\.\d+)?)\s+(\S+)/i);
+    const thresh = reason.match(/(\d+(?:\.\d+)?)\s+(\S+)\s+threshold/i);
+    if (current && thresh) {
+        return {
+            quantity: parseFloat(current[1]),
+            threshold: parseFloat(thresh[1]),
+            unit: current[2] || thresh[2],
+        };
+    }
+
+    return null;
+}
+
+function stockMeterDisplay(suggestion, tier) {
+    const parsed = parseStockFromReason(suggestion.reason);
+    const unit = parsed?.unit || suggestion.reorder_unit || '';
+
+    if (
+        parsed &&
+        Number.isFinite(parsed.quantity) &&
+        Number.isFinite(parsed.threshold) &&
+        parsed.threshold > 0
+    ) {
+        return {
+            quantity: parsed.quantity,
+            threshold: parsed.threshold,
+            unit,
+            fillPct: Math.min((parsed.quantity / parsed.threshold) * 100, 100),
+        };
+    }
+
+    return {
+        quantity: null,
+        threshold: null,
+        unit,
+        fillPct: METER_FALLBACK_PCT[tier],
+    };
+}
+
+function formatStockValue(value, unit) {
+    if (value == null || !Number.isFinite(value)) return '—';
+    return `${value} ${unit}`.trim();
+}
+
 // --- page ------------------------------------------------------------------
 
 export default function AIInsights() {
@@ -255,6 +423,9 @@ export default function AIInsights() {
     const [error, setError]     = useState('');
     const [suggestions, setSuggestions] = useState(null);
     const [itemsAnalysed, setItemsAnalysed] = useState(0);
+
+    const [genBtnHovered, setGenBtnHovered] = useState(false);
+    const [hoveredCardKey, setHoveredCardKey] = useState(null);
 
     // handleGenerate: one-shot analysis; server may return demo: true without OpenAI.
     async function handleGenerate() {
@@ -272,93 +443,152 @@ export default function AIInsights() {
         }
     }
 
+    const showPreGenerateEmpty = suggestions === null && !loading && !error;
+
     return (
         <div>
-            <h1 style={styles.title}>🤖 AI Reorder Insights</h1>
-            <p style={styles.subtitle}>
-                Uses OpenAI to analyse your current stock levels, weekly usage trends,
-                and reorder thresholds — then suggests how much of each item to reorder
-                and by when.
-            </p>
-
-            {/* Central generate card -------------------------------- */}
-            <div style={styles.generateCard}>
-                <div style={styles.brain}>🧠</div>
-                <h2 style={styles.genHeading}>Smart Reorder Analysis</h2>
-                <p style={styles.genExplain}>
-                    The AI considers each item's current quantity, its reorder threshold,
-                    how much was used in the last 7 days, and typical supplier lead
-                    times. Click below to generate a fresh round of suggestions for the
-                    whole inventory.
+            <div style={styles.header}>
+                <h1 style={styles.title}>🤖 AI Reorder Insights</h1>
+                <p style={styles.subtitle}>
+                    Smart reorder suggestions based on your current stock levels and usage
+                    patterns
                 </p>
+            </div>
+
+            {/* Hero generate banner --------------------------------- */}
+            <div style={styles.heroBanner}>
+                <div style={styles.heroLeft}>
+                    <h2 style={styles.heroHeading}>Generate Suggestions</h2>
+                    <p style={styles.heroSubtext}>
+                        Analyzes all current stock levels and recent usage
+                    </p>
+                    {!loading && suggestions !== null && !error && (
+                        <div style={styles.successMsg}>
+                            ✅ Analysed {itemsAnalysed} inventory item
+                            {itemsAnalysed === 1 ? '' : 's'}
+                        </div>
+                    )}
+                </div>
 
                 <button
                     type="button"
                     onClick={handleGenerate}
                     disabled={loading}
-                    style={loading ? { ...styles.genBtn, ...styles.genBtnDisabled } : styles.genBtn}
+                    style={
+                        loading
+                            ? { ...styles.genBtn(false), ...styles.genBtnDisabled }
+                            : styles.genBtn(genBtnHovered)
+                    }
+                    onMouseEnter={() => !loading && setGenBtnHovered(true)}
+                    onMouseLeave={() => setGenBtnHovered(false)}
                 >
-                    {loading ? '⏳ Analysing inventory...' : '✨ Generate AI Suggestions'}
+                    {loading ? (
+                        <>
+                            <span style={styles.spinner} aria-hidden="true">
+                                ⟳
+                            </span>
+                            Analysing inventory...
+                        </>
+                    ) : (
+                        '✨ Generate AI Suggestions'
+                    )}
                 </button>
-
-                {!loading && suggestions !== null && !error && (
-                    <div style={styles.successMsg}>
-                        ✅ Analysed {itemsAnalysed} inventory item
-                        {itemsAnalysed === 1 ? '' : 's'}
-                    </div>
-                )}
             </div>
 
-            {/* Error box -------------------------------------------- */}
             {error && <div style={styles.errorBox}>⚠ {error}</div>}
 
-            {/* Suggestions grid ------------------------------------- */}
-            {suggestions !== null && suggestions.length === 0 && !error && (
-                <div style={styles.emptyState}>
-                    The AI didn't return any suggestions for this inventory.
+            {loading && (
+                <div style={styles.grid}>
+                    {[0, 1, 2].map((i) => (
+                        <div key={`skel-${i}`} style={styles.skeleton} aria-hidden="true" />
+                    ))}
                 </div>
             )}
 
-            {suggestions && suggestions.length > 0 && (
+            {showPreGenerateEmpty && (
+                <div style={styles.preGenerateEmpty}>
+                    <span style={styles.preGenerateEmoji}>🤖</span>
+                    <p style={styles.preGenerateTitle}>Ready to analyse your inventory</p>
+                    <p style={styles.preGenerateSub}>
+                        Click Generate AI Suggestions to get smart reorder recommendations
+                    </p>
+                    <div style={styles.arrowUp} aria-hidden="true">
+                        ↑
+                    </div>
+                </div>
+            )}
+
+            {suggestions !== null && suggestions.length === 0 && !error && !loading && (
+                <div style={styles.emptyResults}>
+                    The AI didn&apos;t return any suggestions for this inventory.
+                </div>
+            )}
+
+            {suggestions && suggestions.length > 0 && !loading && (
                 <div style={styles.grid}>
                     {suggestions.map((s, idx) => {
                         const tone = computeUrgency(s);
-                        const qty = parseFloat(s.reorder_qty);
-                        const qtyDisplay = Number.isFinite(qty) ? qty : 0;
+                        const tier = urgencyTier(tone);
+                        const stock = stockMeterDisplay(s, tier);
+                        const cardKey = `${s.item_name || 'item'}-${idx}`;
+                        const isHovered = hoveredCardKey === cardKey;
+
                         return (
                             <div
-                                key={`${s.item_name || 'item'}-${idx}`}
-                                style={styles.card}
+                                key={cardKey}
+                                style={styles.card(isHovered)}
+                                onMouseEnter={() => setHoveredCardKey(cardKey)}
+                                onMouseLeave={() => setHoveredCardKey(null)}
                             >
-                                <div style={styles.cardHead}>
-                                    <h3 style={styles.cardName} title={s.item_name}>
-                                        {s.item_name || 'Unknown item'}
-                                    </h3>
-                                    <span style={styles.urgency(tone)}>
-                                        {tone.label} {tone.text}
-                                    </span>
+                                <div style={styles.accentBar(tier)} />
+
+                                <div style={styles.cardHeader}>
+                                    <div style={styles.cardNameRow}>
+                                        <h3 style={styles.cardName} title={s.item_name}>
+                                            {s.item_name || 'Unknown item'}
+                                        </h3>
+                                        <span style={styles.urgencyBadge(tier)}>
+                                            {BADGE_STYLES[tier].text}
+                                        </span>
+                                    </div>
+
+                                    <div style={styles.meterTrack}>
+                                        <div
+                                            style={styles.meterFill(
+                                                stock.fillPct,
+                                                tier
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div style={styles.stockDetailsRow}>
+                                        <span>
+                                            Current:{' '}
+                                            {formatStockValue(stock.quantity, stock.unit)}
+                                        </span>
+                                        <span>
+                                            Threshold:{' '}
+                                            {formatStockValue(stock.threshold, stock.unit)}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div style={styles.qtyBox}>
-                                    <span style={styles.qtyLabel}>Reorder Qty</span>
-                                    <span style={styles.qtyValue}>
-                                        {qtyDisplay} {s.reorder_unit || ''}
-                                    </span>
-                                </div>
+                                <div style={styles.divider} />
 
-                                {s.reason && (
-                                    <p style={styles.reason}>
-                                        <span style={styles.reasonIcon}>💡</span>
-                                        <span>{s.reason}</span>
-                                    </p>
-                                )}
+                                <div style={styles.cardFooter}>
+                                    {s.reason && (
+                                        <p style={styles.suggestionText}>
+                                            <span style={styles.suggestionIcon}>💡</span>
+                                            <span>{s.reason}</span>
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
                 </div>
             )}
 
-            {/* Privacy info box ------------------------------------- */}
             <div style={styles.infoBox}>
                 <span>🔒</span>
                 <span>
