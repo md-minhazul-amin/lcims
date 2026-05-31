@@ -72,8 +72,14 @@ export default function Login() {
 
     return (
         <div className="lcims-login">
+            <div className="lcims-login-shape lcims-login-shape-1" aria-hidden="true" />
+            <div className="lcims-login-shape lcims-login-shape-2" aria-hidden="true" />
+            <div className="lcims-login-shape lcims-login-shape-3" aria-hidden="true" />
+
             <form className="lcims-login-card" onSubmit={handleSubmit}>
-                <div className="lcims-login-icon">☕</div>
+                <div className="lcims-login-icon-ring">
+                    <div className="lcims-login-icon">☕</div>
+                </div>
                 <h1 className="lcims-login-title">LCIMS</h1>
                 <p className="lcims-login-sub">Local Café Inventory Management System</p>
 
@@ -104,7 +110,16 @@ export default function Login() {
                 </label>
 
                 <button type="submit" className="lcims-login-submit" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign in'}
+                    {loading ? (
+                        <>
+                            <span className="lcims-login-spinner" aria-hidden="true">
+                                ⟳
+                            </span>
+                            Signing in...
+                        </>
+                    ) : (
+                        'Sign in'
+                    )}
                 </button>
 
                 <p className="lcims-login-footer">
