@@ -35,8 +35,7 @@ const C = {
     bgPanel: '#ffffff',
     bgPage:  '#f0f4f8',
     bgRow:   '#ffffff',
-    bgHover: '#f5f7fa',
-    bgHead:  '#f5f7fa',
+    bgHover: '#f7f9ff',
     okBg:    '#dff5e6',
     okFg:    '#1d703f',
     lowBg:   '#fce8e6',
@@ -46,48 +45,83 @@ const C = {
 const styles = {
     header: {
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'space-between',
         marginBottom: '1rem',
+        gap: '1rem',
+    },
+    titleBlock: {
+        flex: 1,
+        minWidth: 0,
     },
     title: {
         margin: 0,
         fontSize: '1.6rem',
         color: C.ink,
     },
-    addBtn: {
-        background: C.blue,
+    subtitle: {
+        fontSize: '0.85rem',
+        color: '#5d6a78',
+        margin: '0.2rem 0 0',
+    },
+    addBtn: (hovered) => ({
+        background: 'linear-gradient(90deg, #2f55a5, #3d6acb)',
         color: '#ffffff',
         border: 'none',
-        padding: '0.55rem 1rem',
-        borderRadius: 6,
+        padding: '0.6rem 1.2rem',
+        borderRadius: 8,
         fontWeight: 600,
         cursor: 'pointer',
         fontSize: '0.9rem',
+        boxShadow: hovered
+            ? '0 4px 14px rgba(61,106,203,0.38)'
+            : '0 2px 8px rgba(61,106,203,0.25)',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+        transition: 'transform 0.18s, box-shadow 0.18s',
+    }),
+    searchWrap: {
+        position: 'relative',
+        marginBottom: '1rem',
     },
-    search: {
+    searchIcon: {
+        position: 'absolute',
+        left: 12,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        fontSize: '0.9rem',
+        color: '#7b8794',
+        pointerEvents: 'none',
+    },
+    search: (focused) => ({
         display: 'block',
         width: '100%',
         padding: '0.65rem 0.95rem',
-        border: `1px solid ${C.border}`,
-        borderRadius: 6,
+        paddingLeft: '2.2rem',
+        border: focused ? '1.5px solid #3d6acb' : '1.5px solid #e2e8f0',
+        borderRadius: 10,
         fontSize: '0.95rem',
-        marginBottom: '1rem',
         boxSizing: 'border-box',
         background: '#ffffff',
-    },
+        boxShadow: focused ? '0 0 0 3px rgba(61,106,203,0.12)' : 'none',
+        transition: 'all 0.18s',
+        outline: 'none',
+    }),
     formPanel: {
-        background: C.bgPanel,
-        padding: '1.25rem 1.5rem 1.1rem',
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
+        background: '#ffffff',
+        padding: '1.5rem',
+        borderRadius: 14,
+        boxShadow: '0 4px 20px rgba(15,30,60,0.10)',
+        border: '1px solid #e2e8f0',
         marginBottom: '1rem',
+        animation: 'fadeInDown 0.22s ease both',
     },
     formHeading: {
         margin: '0 0 1rem',
-        fontSize: '1.05rem',
+        fontSize: '1.1rem',
         fontWeight: 600,
-        color: C.ink,
+        color: '#1e3a5f',
+        borderBottom: '1px solid #eef0f2',
+        paddingBottom: '0.75rem',
     },
     formGrid: {
         display: 'grid',
@@ -102,41 +136,51 @@ const styles = {
         fontSize: '0.82rem',
         color: '#3e4c59',
     },
-    input: {
-        padding: '0.5rem 0.7rem',
-        border: `1px solid ${C.border}`,
-        borderRadius: 6,
-        fontSize: '0.95rem',
+    input: (focused) => ({
+        padding: '0.6rem 0.85rem',
+        border: focused ? '1.5px solid #3d6acb' : '1.5px solid #e2e8f0',
+        borderRadius: 8,
+        fontSize: '0.92rem',
         fontFamily: 'inherit',
         background: '#fafbfc',
         width: '100%',
         boxSizing: 'border-box',
-    },
+        boxShadow: focused ? '0 0 0 3px rgba(61,106,203,0.12)' : 'none',
+        transition: 'all 0.18s',
+        outline: 'none',
+    }),
     formActions: {
         display: 'flex',
         justifyContent: 'flex-end',
         gap: '0.5rem',
     },
-    saveBtn: {
-        background: C.blue,
+    saveBtn: (hovered) => ({
+        background: 'linear-gradient(90deg, #2f55a5, #3d6acb)',
         color: '#ffffff',
         border: 'none',
-        padding: '0.55rem 1.2rem',
-        borderRadius: 6,
+        padding: '0.6rem 1.2rem',
+        borderRadius: 8,
         fontWeight: 600,
         cursor: 'pointer',
         fontSize: '0.9rem',
-    },
+        boxShadow: hovered
+            ? '0 4px 14px rgba(61,106,203,0.38)'
+            : '0 2px 8px rgba(61,106,203,0.25)',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
+        transition: 'transform 0.18s, box-shadow 0.18s',
+    }),
     saveBtnDisabled: {
         background: '#9aa5b1',
+        boxShadow: 'none',
+        transform: 'none',
         cursor: 'not-allowed',
     },
     cancelBtn: {
-        background: '#ffffff',
-        color: '#3e4c59',
-        border: `1px solid ${C.border}`,
+        background: '#f5f7fa',
+        color: '#1e3a5f',
+        border: '1px solid #cbd2d9',
         padding: '0.55rem 1.2rem',
-        borderRadius: 6,
+        borderRadius: 8,
         cursor: 'pointer',
         fontSize: '0.9rem',
     },
@@ -150,65 +194,97 @@ const styles = {
         fontSize: '0.85rem',
     },
     tableWrap: {
-        background: C.bgPanel,
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(15,30,60,0.06)',
+        background: '#ffffff',
+        borderRadius: 14,
+        boxShadow: '0 2px 8px rgba(15,30,60,0.08)',
         overflow: 'auto',
+        border: '1px solid #eef0f2',
     },
     table: {
         width: '100%',
         borderCollapse: 'collapse',
     },
+    theadRow: {
+        background: 'linear-gradient(90deg, #f5f8ff, #f0f4f8)',
+    },
     th: (alignRight) => ({
         textAlign: alignRight ? 'right' : 'left',
-        padding: '0.7rem 0.95rem',
-        fontSize: '0.74rem',
-        color: C.sub,
+        padding: '0.85rem 1rem',
+        fontSize: '0.78rem',
+        color: '#5d6a78',
         textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        borderBottom: `1px solid #e4e7eb`,
-        background: C.bgHead,
+        letterSpacing: '0.06em',
+        borderBottom: '2px solid #e2e8f0',
+        background: 'transparent',
         fontWeight: 600,
         whiteSpace: 'nowrap',
     }),
     row: (hovered, isLast) => ({
         background: hovered ? C.bgHover : C.bgRow,
         cursor: 'pointer',
-        transition: 'background 0.1s',
-        borderBottom: isLast ? 'none' : `1px solid ${C.line}`,
+        transition: 'background 0.12s',
     }),
-    td: (alignRight) => ({
-        padding: '0.7rem 0.95rem',
+    td: (alignRight, isLast) => ({
+        padding: '0.85rem 1rem',
         color: '#1f2933',
         fontSize: '0.9rem',
         textAlign: alignRight ? 'right' : 'left',
         fontVariantNumeric: 'tabular-nums',
+        borderBottom: isLast ? 'none' : '1px solid #f0f2f5',
     }),
-    badgeOk: {
-        background: C.okBg,
-        color: C.okFg,
-        padding: '0.22rem 0.65rem',
+    categoryPill: {
+        background: '#eaf1ff',
+        color: '#2745a4',
+        padding: '0.18rem 0.65rem',
         borderRadius: 999,
-        fontSize: '0.78rem',
+        fontSize: '0.75rem',
         fontWeight: 600,
+        display: 'inline-block',
+    },
+    badgeOk: {
+        background: '#dff5e6',
+        color: '#1d703f',
+        padding: '0.2rem 0.75rem',
+        borderRadius: 999,
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        letterSpacing: '0.03em',
         whiteSpace: 'nowrap',
         display: 'inline-block',
     },
     badgeLow: {
-        background: C.lowBg,
-        color: C.lowFg,
-        padding: '0.22rem 0.65rem',
+        background: '#fce8e6',
+        color: '#a8262b',
+        padding: '0.2rem 0.75rem',
         borderRadius: 999,
-        fontSize: '0.78rem',
-        fontWeight: 600,
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        letterSpacing: '0.03em',
         whiteSpace: 'nowrap',
         display: 'inline-block',
     },
-    emptyState: {
+    emptyStateBox: {
+        background: '#f7f9ff',
+        border: '1.5px dashed #cbd2d9',
+        borderRadius: 12,
+        padding: '2.5rem',
         textAlign: 'center',
-        padding: '2rem',
+    },
+    emptyEmoji: {
+        fontSize: '2.5rem',
+        marginBottom: '0.75rem',
+        display: 'block',
+    },
+    emptyTitle: {
+        margin: '0 0 0.35rem',
+        fontSize: '1rem',
+        fontWeight: 600,
+        color: C.ink,
+    },
+    emptySub: {
+        margin: 0,
+        fontSize: '0.85rem',
         color: C.grey,
-        fontSize: '0.92rem',
     },
     loading: { padding: '2rem', color: C.sub },
     error: {
@@ -257,6 +333,10 @@ export default function Inventory() {
     const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
+    const [addBtnHovered, setAddBtnHovered] = useState(false);
+    const [saveBtnHovered, setSaveBtnHovered] = useState(false);
+    const [searchFocused, setSearchFocused] = useState(false);
+    const [focusedField, setFocusedField] = useState(null);
 
     // --- initial load ------------------------------------------------------
     useEffect(() => {
@@ -352,12 +432,17 @@ export default function Inventory() {
         <div>
             {/* Header --------------------------------------------------- */}
             <div style={styles.header}>
-                <h1 style={styles.title}>📦 Inventory</h1>
+                <div style={styles.titleBlock}>
+                    <h1 style={styles.title}>📦 Inventory</h1>
+                    <p style={styles.subtitle}>Manage your cafe stock levels and items</p>
+                </div>
                 {canManage && (
                     <button
                         type="button"
-                        style={styles.addBtn}
+                        style={styles.addBtn(addBtnHovered)}
                         onClick={showAddForm ? cancelForm : openForm}
+                        onMouseEnter={() => setAddBtnHovered(true)}
+                        onMouseLeave={() => setAddBtnHovered(false)}
                     >
                         + Add Item
                     </button>
@@ -365,13 +450,20 @@ export default function Inventory() {
             </div>
 
             {/* Search --------------------------------------------------- */}
-            <input
-                type="search"
-                placeholder="Search by name or category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={styles.search}
-            />
+            <div style={styles.searchWrap}>
+                <span style={styles.searchIcon} aria-hidden="true">
+                    🔍
+                </span>
+                <input
+                    type="search"
+                    placeholder="Search by name or category..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    style={styles.search(searchFocused)}
+                />
+            </div>
 
             {/* Add form (collapsible) ----------------------------------- */}
             {showAddForm && (
@@ -384,8 +476,10 @@ export default function Inventory() {
                             <span>Item Name</span>
                             <input
                                 type="text"
-                                style={styles.input}
+                                style={styles.input(focusedField === 'name')}
                                 value={form.name}
+                                onFocus={() => setFocusedField('name')}
+                                onBlur={() => setFocusedField(null)}
                                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                                 required
                             />
@@ -395,8 +489,10 @@ export default function Inventory() {
                             <span>Category</span>
                             <input
                                 type="text"
-                                style={styles.input}
+                                style={styles.input(focusedField === 'category')}
                                 value={form.category}
+                                onFocus={() => setFocusedField('category')}
+                                onBlur={() => setFocusedField(null)}
                                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                                 required
                             />
@@ -406,9 +502,11 @@ export default function Inventory() {
                             <span>Unit</span>
                             <input
                                 type="text"
-                                style={styles.input}
+                                style={styles.input(focusedField === 'unit')}
                                 placeholder="kg, L, unit, pack..."
                                 value={form.unit}
+                                onFocus={() => setFocusedField('unit')}
+                                onBlur={() => setFocusedField(null)}
                                 onChange={(e) => setForm({ ...form, unit: e.target.value })}
                                 required
                             />
@@ -417,8 +515,10 @@ export default function Inventory() {
                         <label style={styles.field}>
                             <span>Supplier</span>
                             <select
-                                style={styles.input}
+                                style={styles.input(focusedField === 'supplier')}
                                 value={form.supplier_id}
+                                onFocus={() => setFocusedField('supplier')}
+                                onBlur={() => setFocusedField(null)}
                                 onChange={(e) =>
                                     setForm({ ...form, supplier_id: e.target.value })
                                 }
@@ -438,8 +538,10 @@ export default function Inventory() {
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                style={styles.input}
+                                style={styles.input(focusedField === 'quantity')}
                                 value={form.quantity}
+                                onFocus={() => setFocusedField('quantity')}
+                                onBlur={() => setFocusedField(null)}
                                 onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                             />
                         </label>
@@ -450,8 +552,10 @@ export default function Inventory() {
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                style={styles.input}
+                                style={styles.input(focusedField === 'threshold')}
                                 value={form.threshold}
+                                onFocus={() => setFocusedField('threshold')}
+                                onBlur={() => setFocusedField(null)}
                                 onChange={(e) => setForm({ ...form, threshold: e.target.value })}
                             />
                         </label>
@@ -466,9 +570,11 @@ export default function Inventory() {
                             disabled={saving}
                             style={
                                 saving
-                                    ? { ...styles.saveBtn, ...styles.saveBtnDisabled }
-                                    : styles.saveBtn
+                                    ? { ...styles.saveBtn(false), ...styles.saveBtnDisabled }
+                                    : styles.saveBtn(saveBtnHovered)
                             }
+                            onMouseEnter={() => !saving && setSaveBtnHovered(true)}
+                            onMouseLeave={() => setSaveBtnHovered(false)}
                         >
                             {saving ? 'Saving...' : 'Save'}
                         </button>
@@ -480,7 +586,7 @@ export default function Inventory() {
             <div style={styles.tableWrap}>
                 <table style={styles.table}>
                     <thead>
-                        <tr>
+                        <tr style={styles.theadRow}>
                             <th style={styles.th(false)}>Item Name</th>
                             <th style={styles.th(false)}>Category</th>
                             <th style={styles.th(true)}>Qty</th>
@@ -493,10 +599,20 @@ export default function Inventory() {
                     <tbody>
                         {visibleItems.length === 0 ? (
                             <tr>
-                                <td colSpan={7} style={styles.emptyState}>
-                                    {q
-                                        ? `No items match "${searchQuery}".`
-                                        : 'No items yet.'}
+                                <td colSpan={7} style={{ padding: '1rem', border: 'none' }}>
+                                    <div style={styles.emptyStateBox}>
+                                        <span style={styles.emptyEmoji}>📦</span>
+                                        <p style={styles.emptyTitle}>
+                                            {q
+                                                ? `No items match "${searchQuery}"`
+                                                : 'No inventory items found'}
+                                        </p>
+                                        <p style={styles.emptySub}>
+                                            {q
+                                                ? 'Try adjusting your search or add a new item'
+                                                : 'Try adjusting your search or add a new item'}
+                                        </p>
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
@@ -515,17 +631,21 @@ export default function Inventory() {
                                         onMouseLeave={() => setHoveredId(null)}
                                         style={styles.row(isHover, isLast)}
                                     >
-                                        <td style={styles.td(false)}>{item.name}</td>
-                                        <td style={styles.td(false)}>{item.category}</td>
-                                        <td style={styles.td(true)}>{qty.toFixed(2)}</td>
-                                        <td style={styles.td(false)}>{item.unit}</td>
-                                        <td style={styles.td(true)}>{thr.toFixed(2)}</td>
-                                        <td style={styles.td(false)}>
+                                        <td style={styles.td(false, isLast)}>{item.name}</td>
+                                        <td style={styles.td(false, isLast)}>
+                                            <span style={styles.categoryPill}>
+                                                {item.category}
+                                            </span>
+                                        </td>
+                                        <td style={styles.td(true, isLast)}>{qty.toFixed(2)}</td>
+                                        <td style={styles.td(false, isLast)}>{item.unit}</td>
+                                        <td style={styles.td(true, isLast)}>{thr.toFixed(2)}</td>
+                                        <td style={styles.td(false, isLast)}>
                                             {item.supplier_name || '—'}
                                         </td>
-                                        <td style={styles.td(false)}>
+                                        <td style={styles.td(false, isLast)}>
                                             <span style={isLow ? styles.badgeLow : styles.badgeOk}>
-                                                {isLow ? '⚠ Low Stock' : '✓ OK'}
+                                                {isLow ? '• Low Stock' : '✓ OK'}
                                             </span>
                                         </td>
                                     </tr>
